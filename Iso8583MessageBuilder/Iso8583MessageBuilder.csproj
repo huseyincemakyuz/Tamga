@@ -58,6 +58,7 @@
     <Compile Include="Models\FieldDefinition.cs" />
     <Compile Include="Models\Iso8583Fields.cs" />
     <Compile Include="Models\Iso8583MessageBuilder.cs" />
+    <Compile Include="Models\Iso8583MessageParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Templates\MessageTemplates.cs" />

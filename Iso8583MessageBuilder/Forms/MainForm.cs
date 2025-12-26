@@ -13,6 +13,7 @@ namespace Iso8583MessageBuilder.Forms
 {
     public class MainForm : Form
     {
+        // Build Tab kontrolleri
         private ComboBox cmbMessageType;
         private Panel pnlFields;
         private Button btnGenerate;
@@ -23,6 +24,16 @@ namespace Iso8583MessageBuilder.Forms
         private Button btnCopyHex;
         private Button btnSaveToFile;
         private Label lblHexLength;
+
+        // TabControl
+        private TabControl tabControl;
+        private TabPage tabBuild;
+        private TabPage tabParse;
+
+        // Parse Tab kontrolleri
+        private TextBox txtHexInput;
+        private Button btnParse;
+        private RichTextBox rtbParseResult;
 
         private List<FieldControl> fieldControls = new List<FieldControl>();
         private Models.Iso8583MessageBuilder messageBuilder = new Models.Iso8583MessageBuilder();
@@ -39,6 +50,29 @@ namespace Iso8583MessageBuilder.Forms
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
 
+            // TabControl oluştur
+            tabControl = new TabControl
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            // Tab 1: Build Message
+            tabBuild = new TabPage("Build Message");
+            InitializeBuildTab();
+
+            // Tab 2: Parse Message
+            tabParse = new TabPage("Parse Message");
+            InitializeParseTab();
+
+            tabControl.TabPages.Add(tabBuild);
+            tabControl.TabPages.Add(tabParse);
+
+            this.Controls.Add(tabControl);
+        }
+
+        private void InitializeBuildTab()
+        {
             // Top Panel - Message Type Selection
             var topPanel = new Panel
             {
@@ -238,11 +272,107 @@ namespace Iso8583MessageBuilder.Forms
                 BackColor = Color.Gray
             };
 
-            // Add all to form
-            this.Controls.Add(middlePanel);
-            this.Controls.Add(splitter);
-            this.Controls.Add(bottomPanel);
-            this.Controls.Add(topPanel);
+            // Add all to Build tab
+            tabBuild.Controls.Add(middlePanel);
+            tabBuild.Controls.Add(splitter);
+            tabBuild.Controls.Add(bottomPanel);
+            tabBuild.Controls.Add(topPanel);
+        }
+
+        private void InitializeParseTab()
+        {
+            var mainPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(20)
+            };
+
+            // Title
+            var lblTitle = new Label
+            {
+                Text = "Paste Hex Message to Parse:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 30
+            };
+
+            // Hex Input
+            txtHexInput = new TextBox
+            {
+                Dock = DockStyle.Top,
+                Height = 120,
+                Multiline = true,
+                Font = new Font("Consolas", 10),
+                ScrollBars = ScrollBars.Vertical,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            // Button Panel
+            var btnPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 50,
+                Padding = new Padding(0, 10, 0, 0)
+            };
+
+            btnParse = new Button
+            {
+                Location = new Point(0, 10),
+                Text = "🔍 Parse & Decode Message",
+                Width = 200,
+                Height = 35,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnParse.FlatAppearance.BorderSize = 0;
+            btnParse.Click += BtnParse_Click;
+
+            var btnClearParse = new Button
+            {
+                Location = new Point(210, 10),
+                Text = "🗑️ Clear",
+                Width = 100,
+                Height = 35,
+                Font = new Font("Segoe UI", 9)
+            };
+            btnClearParse.Click += (s, ev) =>
+            {
+                txtHexInput.Clear();
+                rtbParseResult.Clear();
+            };
+
+            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse });
+
+            // Result Label
+            var lblResult = new Label
+            {
+                Text = "Parsed Result:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 30,
+                Padding = new Padding(0, 10, 0, 0)
+            };
+
+            // Result Display
+            rtbParseResult = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 9),
+                ReadOnly = true,
+                BackColor = Color.FromArgb(250, 250, 250),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            mainPanel.Controls.Add(rtbParseResult);
+            mainPanel.Controls.Add(lblResult);
+            mainPanel.Controls.Add(btnPanel);
+            mainPanel.Controls.Add(txtHexInput);
+            mainPanel.Controls.Add(lblTitle);
+
+            tabParse.Controls.Add(mainPanel);
         }
 
         private void LoadMessageTemplates()
@@ -375,6 +505,96 @@ namespace Iso8583MessageBuilder.Forms
             }
         }
 
+        private void BtnParse_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                rtbParseResult.Clear();
+
+                if (string.IsNullOrWhiteSpace(txtHexInput.Text))
+                {
+                    MessageBox.Show("Please enter a hex message to parse!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var parser = new Iso8583MessageParser();
+                var parsedMessage = parser.Parse(txtHexInput.Text);
+
+                // Display MTI
+                AppendColoredToParseResult($"MTI: {parsedMessage.MTI}\n", Color.DarkBlue, true);
+                AppendColoredToParseResult($"Message Type: {GetMessageTypeName(parsedMessage.MTI)}\n\n", Color.Gray, false);
+
+                // Display Bitmaps
+                AppendColoredToParseResult("Bitmaps:\n", Color.Black, true);
+                AppendColoredToParseResult($"  Primary:   {parsedMessage.PrimaryBitmap}\n", Color.DarkGreen, false);
+
+                if (!string.IsNullOrEmpty(parsedMessage.SecondaryBitmap))
+                {
+                    AppendColoredToParseResult($"  Secondary: {parsedMessage.SecondaryBitmap}\n", Color.DarkGreen, false);
+                }
+
+                AppendColoredToParseResult("\n", Color.Black, false);
+
+                // Display Fields
+                AppendColoredToParseResult($"Fields: ({parsedMessage.Fields.Count} fields present)\n", Color.Black, true);
+                AppendColoredToParseResult("─────────────────────────────────────────────────────────────\n", Color.Gray, false);
+
+                foreach (var field in parsedMessage.Fields.OrderBy(f => f.Key))
+                {
+                    var fieldDef = Iso8583Fields.Fields[field.Key];
+
+                    AppendColoredToParseResult($"\nF{field.Key:D3} ", Color.DarkRed, true);
+                    AppendColoredToParseResult($"- {fieldDef.Name}\n", Color.Gray, false);
+                    AppendColoredToParseResult($"     Type: ", Color.Gray, false);
+                    AppendColoredToParseResult($"{fieldDef.Type}, {fieldDef.LengthType}\n", Color.DarkCyan, false);
+                    AppendColoredToParseResult($"     Value: ", Color.Gray, false);
+                    AppendColoredToParseResult($"{field.Value}\n", Color.DarkBlue, false);
+                }
+
+                // Display Errors/Warnings
+                if (parsedMessage.Errors.Count > 0)
+                {
+                    AppendColoredToParseResult("\n\n", Color.Black, false);
+                    AppendColoredToParseResult("Warnings/Errors:\n", Color.DarkOrange, true);
+                    AppendColoredToParseResult("─────────────────────────────────────────────────────────────\n", Color.Gray, false);
+
+                    foreach (var error in parsedMessage.Errors)
+                    {
+                        AppendColoredToParseResult($"⚠ {error}\n", Color.Red, false);
+                    }
+                }
+                else
+                {
+                    AppendColoredToParseResult("\n\n", Color.Black, false);
+                    AppendColoredToParseResult("✓ Message parsed successfully with no errors!\n", Color.Green, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                rtbParseResult.Clear();
+                AppendColoredToParseResult("Parse Error:\n", Color.Red, true);
+                AppendColoredToParseResult($"{ex.Message}\n\n", Color.Red, false);
+                AppendColoredToParseResult("Stack Trace:\n", Color.Gray, false);
+                AppendColoredToParseResult(ex.StackTrace, Color.Gray, false);
+            }
+        }
+
+        private void AppendColoredToParseResult(string text, Color color, bool bold = false)
+        {
+            rtbParseResult.SelectionStart = rtbParseResult.TextLength;
+            rtbParseResult.SelectionLength = 0;
+            rtbParseResult.SelectionColor = color;
+            rtbParseResult.SelectionFont = new Font(rtbParseResult.Font, bold ? FontStyle.Bold : FontStyle.Regular);
+            rtbParseResult.AppendText(text);
+            rtbParseResult.SelectionColor = rtbParseResult.ForeColor;
+        }
+
+        private string GetMessageTypeName(string mti)
+        {
+            var template = MessageTemplates.Templates.FirstOrDefault(t => t.MTI == mti);
+            return template != null ? template.Name : "Unknown";
+        }
+
         private string FormatHexString(string hex)
         {
             var sb = new StringBuilder();
@@ -452,12 +672,12 @@ namespace Iso8583MessageBuilder.Forms
                 }
             }
         }
-    }  
-}
+    }
 
-public class ComboBoxItem
-{
-    public string Text { get; set; }
-    public object Value { get; set; }
-    public override string ToString() => Text;
+    public class ComboBoxItem
+    {
+        public string Text { get; set; }
+        public object Value { get; set; }
+        public override string ToString() => Text;
+    }
 }
