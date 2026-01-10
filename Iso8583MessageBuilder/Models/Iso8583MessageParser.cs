@@ -22,17 +22,17 @@ namespace Iso8583MessageBuilder.Models
 
             try
             {
-                // Remove spaces and newlines
+                // Boşlukları ve satır sonlarını kaldırıyoruz. Tek atrı haline gitiriyoruz
                 hexString = hexString.Replace(" ", "").Replace("\r", "").Replace("\n", "").Trim();
 
-                // Convert hex to bytes
+                // Hex stringi byte'a çeviriyoruz
                 byte[] messageBytes = HexStringToByteArray(hexString);
                 int position = 0;
 
-                // 1. Parse MTI (4 ASCII characters = 4 bytes)
+                // 1. Parse MTI (4 ASCII karakter = 4 bytes)
                 if (messageBytes.Length < 4)
                 {
-                    result.Errors.Add("Message too short - cannot read MTI");
+                    result.Errors.Add("Message çok kısa - MTI okunamıyor!");
                     return result;
                 }
 
@@ -42,7 +42,7 @@ namespace Iso8583MessageBuilder.Models
                 // 2. Parse Primary Bitmap (8 bytes = 64 bits)
                 if (messageBytes.Length < position + 8)
                 {
-                    result.Errors.Add("Message too short - cannot read bitmap");
+                    result.Errors.Add("Message çok kısa - bitmap okunamıyor!");
                     return result;
                 }
 
@@ -51,7 +51,7 @@ namespace Iso8583MessageBuilder.Models
                 result.PrimaryBitmap = BitConverter.ToString(primaryBitmap).Replace("-", "");
                 position += 8;
 
-                // Check if secondary bitmap exists (bit 1 of primary bitmap)
+                // Secondary bitmap'in olup olmadığını kontrol ediyoruz exists (primary bitmap'in birinci biti)
                 bool hasSecondaryBitmap = IsBitSet(primaryBitmap, 1);
                 byte[] secondaryBitmap = null;
 
@@ -59,7 +59,7 @@ namespace Iso8583MessageBuilder.Models
                 {
                     if (messageBytes.Length < position + 8)
                     {
-                        result.Errors.Add("Secondary bitmap indicated but not present");
+                        result.Errors.Add("Secondary bitmap belirtilmiş ama mevcut değil!");
                         return result;
                     }
 
@@ -69,7 +69,7 @@ namespace Iso8583MessageBuilder.Models
                     position += 8;
                 }
 
-                // 3. Parse Fields based on bitmap
+                // 3. Bitmap'e dayalı alanları parse ediyoruz
                 for (int fieldNum = 2; fieldNum <= 128; fieldNum++)
                 {
                     bool fieldPresent = false;
@@ -87,7 +87,7 @@ namespace Iso8583MessageBuilder.Models
                     {
                         if (!Iso8583Fields.Fields.ContainsKey(fieldNum))
                         {
-                            result.Errors.Add($"Field {fieldNum} is set but not defined in configuration");
+                            result.Errors.Add($"Field {fieldNum} alanı ayarlanmış ancak tanımlanmamış");
                             continue;
                         }
 
@@ -100,14 +100,14 @@ namespace Iso8583MessageBuilder.Models
                         }
                         catch (Exception ex)
                         {
-                            result.Errors.Add($"Error parsing field {fieldNum}: {ex.Message}");
+                            result.Errors.Add($"Alan parse edilemedi {fieldNum}: {ex.Message}");
                         }
                     }
                 }
 
                 if (position < messageBytes.Length)
                 {
-                    result.Errors.Add($"Warning: {messageBytes.Length - position} bytes remaining after parsing");
+                    result.Errors.Add($"Warning: {messageBytes.Length - position} parse sonrası kalan byte'lar");
                 }
             }
             catch (Exception ex)
@@ -129,7 +129,7 @@ namespace Iso8583MessageBuilder.Models
                     fieldLength = fieldDef.MaxLength;
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"Not enough data for fixed field (need {fieldLength} bytes)");
+                        throw new Exception($"Fixed alan için yeterli veri yok ({fieldLength} byte gereli)");
                     }
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
                     position += fieldLength;
@@ -138,19 +138,19 @@ namespace Iso8583MessageBuilder.Models
                 case LengthType.LLVAR:
                     if (position + 2 > messageBytes.Length)
                     {
-                        throw new Exception("Not enough data for LLVAR length prefix");
+                        throw new Exception("LLVAR uzunluk öneki için yeterli veri yok.");
                     }
                     string lengthStr = Encoding.ASCII.GetString(messageBytes, position, 2);
                     position += 2;
 
                     if (!int.TryParse(lengthStr, out fieldLength))
                     {
-                        throw new Exception($"Invalid LLVAR length: {lengthStr}");
+                        throw new Exception($"Geçersiz LLVAR uzunluğu: {lengthStr}");
                     }
 
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"Not enough data for LLVAR field (need {fieldLength} bytes)");
+                        throw new Exception($"LLVAR alanı için yeterli veri yok. ({fieldLength} byte gereli)");
                     }
 
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
@@ -160,19 +160,19 @@ namespace Iso8583MessageBuilder.Models
                 case LengthType.LLLVAR:
                     if (position + 3 > messageBytes.Length)
                     {
-                        throw new Exception("Not enough data for LLLVAR length prefix");
+                        throw new Exception("LLLVAR uzunluk öneki için yeterli veri yok.");
                     }
                     string lengthStr3 = Encoding.ASCII.GetString(messageBytes, position, 3);
                     position += 3;
 
                     if (!int.TryParse(lengthStr3, out fieldLength))
                     {
-                        throw new Exception($"Invalid LLLVAR length: {lengthStr3}");
+                        throw new Exception($"Geçersiz LLLVAR uzunluğu: {lengthStr3}");
                     }
 
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"Not enough data for LLLVAR field (need {fieldLength} bytes)");
+                        throw new Exception($"LLLVAR alanı için yeterli veri yok. ({fieldLength} byte gereli)");
                     }
 
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
@@ -183,29 +183,34 @@ namespace Iso8583MessageBuilder.Models
             return value.TrimEnd(); // Remove trailing spaces for fixed fields
         }
 
-        private bool IsBitSet(byte[] bitmap, int bitPosition)
+        // Alan kontrolü
+        private bool IsBitSet(byte[] bitmap, int bitPosition)  // bitPosition => örneğin F10 alanı 10.bit oluyor. 1'den 64 kadar olan ilk bitmap içinde pozisyonu 10.
         {
-            // Bit position is 1-based
-            int byteIndex = (bitPosition - 1) / 8;
-            int bitIndex = 7 - ((bitPosition - 1) % 8);
+            //Bit index:   7 6 5 4 3 2 1 0
+            //Binary:     MSB           LSB
+
+            // Bit pozisyonu 1 tabanlıdır.
+            int byteIndex = (bitPosition - 1) / 8;  // F10'dan ilerleyelim => 1 byte 8 bit o halde F10 hangi byte içinde olduğunu nasıl buluruz pozisyonunu 8 bölerek (10-1/8=1).  -1 olayı ilk bit secondary bitmap var mı onun değeri o sebeple onu çıkardık.
+            int bitIndex = 7 - ((bitPosition - 1) % 8); // F10 byte indexi 1 yani 2.byte'da (0,1,2,...). peki bit indexi nedir => bu byte'ın içindeki konumu, byte içinde bitler soldan sağa yerleşiyor 7,6,5,4,3,2,1,0 => 7=>f9,6=>f10 formülde bu şekilde çıkıyor.
 
             if (byteIndex >= bitmap.Length)
                 return false;
 
-            return (bitmap[byteIndex] & (1 << bitIndex)) != 0;
+            return (bitmap[byteIndex] & (1 << bitIndex)) != 0; // << ifadesi 1 değerini biIndexdeki değer kadar sola kaydırır. & => (bitwiseand tek tek bit üzerinde (1&1=1,1&0=0) çalışıyor)            
+
         }
 
-        private byte[] HexStringToByteArray(string hex)
+        private byte[] HexStringToByteArray(string hex) 
         {
-            if (hex.Length % 2 != 0)
+            if (hex.Length % 2 != 0) // Hex formatta 1 byte = 2 hex karakter
             {
-                throw new ArgumentException("Hex string must have even length");
+                throw new ArgumentException("Hex string uzunluğu çift olmalıdır!");
             }
 
             byte[] bytes = new byte[hex.Length / 2];
             for (int i = 0; i < hex.Length; i += 2)
             {
-                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16); // 16 -> hex tabanı
             }
             return bytes;
         }

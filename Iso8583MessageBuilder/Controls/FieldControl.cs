@@ -116,7 +116,7 @@ namespace Iso8583MessageBuilder.Controls
                 case 13: // Local Date MMDD
                     txtValue.Text = now.ToString("MMdd");
                     break;
-                case 37: // RRN
+                case 37: // RRN şimdilik böyle kasın düzelteceğim
                     txtValue.Text = now.ToString("yyMMddHHmmss");
                     break;
             }

@@ -13,7 +13,7 @@ namespace Iso8583MessageBuilder.Models
         public Iso8583MessageBuilder SetMTI(string mti)
         {
             if (mti.Length != 4)
-                throw new ArgumentException("MTI must be 4 digits");
+                throw new ArgumentException("MTI 4 haneli olmalıdır.");
 
             _mti = mti;
             return this;
@@ -22,7 +22,7 @@ namespace Iso8583MessageBuilder.Models
         public Iso8583MessageBuilder SetField(int fieldNumber, string value)
         {
             if (!Iso8583Fields.Fields.ContainsKey(fieldNumber))
-                throw new ArgumentException($"Field {fieldNumber} is not defined");
+                throw new ArgumentException($"Alan {fieldNumber} tanımlı değil!");
 
             _fields[fieldNumber] = value;
             return this;
@@ -31,7 +31,7 @@ namespace Iso8583MessageBuilder.Models
         public string BuildHexString()
         {
             if (string.IsNullOrEmpty(_mti))
-                throw new InvalidOperationException("MTI must be set");
+                throw new InvalidOperationException("MTI tanımlanmak zorunda!");
 
             var messageBytes = new List<byte>();
 
@@ -55,7 +55,7 @@ namespace Iso8583MessageBuilder.Models
             return ByteArrayToHexString(messageBytes.ToArray());
         }
 
-        private byte[] GenerateBitmap()
+        private byte[] GenerateBitmap() 
         {
             int maxField = _fields.Keys.Max();
             bool needSecondary = maxField > 64;
@@ -91,13 +91,34 @@ namespace Iso8583MessageBuilder.Models
             return primaryBitmap;
         }
 
-        private void SetBit(byte[] bitmap, int bitPosition)
+        private void SetBit(byte[] bitmap, int bitPosition) // 1 HEX karakter = 4 bit => primary bitmap 64 bit => 16*4=64 => bitmap 16 hane olmalı
         {
             int byteIndex = (bitPosition - 1) / 8;
             int bitIndex = 7 - ((bitPosition - 1) % 8);
 
-            bitmap[byteIndex] |= (byte)(1 << bitIndex);
+            bitmap[byteIndex] |= (byte)(1 << bitIndex); // | bitwise OR => 1|1=1 , 1|0=1 => byteIndex diyelim 2 oradaki bitlerle set edeceğim bitlere göre karşılaştırma yapıp atama yapıyoruz böylece öneki atamları bozmadan direkt kendi atamalarımızı yapıyoruz.
         }
+
+        // Bitmap nasıl oluşur:
+        // 1 hex karakter = 4 bit  => tabloya göre bir banry hexe dönüşümü => 01110000 = 0x70 => bu byte'ın binary gösteriminde hex gösterimibe çevrilmesi, stringe çevirirsek 70 olur. 
+        //| Binary | Hex |         Bit:      7   6   5   4   3   2   1   0    (2 üzeri n) => bu tabloyuda binaryd ecimale nasıl dönüştürürüz onu kullanmak için ekledim                             
+        //| ------ | --- |         Değer:  128  64  32  16   8   4   2   1    
+        //| 0000   | 0   |        
+        //| 0001   | 1   |        01110000 => 0*128=0, 1*64=64, 1*32=32, 1*16=16, 0*8=0, 0*4=0, 0*2=0 ,0*1=0 => hespini topla => 112 yani  01110000 (binary) => 0x70 (hex) => 112 (decimal) (1 BYTE GÖSTERİMLERİ)
+        //| 0010   | 2   |        0x70 => 7*(16 üzeri 1) + 0*(16 üzeri 0) = 7*16 = 112 (hex 16 tabanlı buradan da decimale çevirebiliriz)
+        //| 0011   | 3   |
+        //| 0100   | 4   |
+        //| 0101   | 5   |
+        //| 0110   | 6   |
+        //| 0111   | 7   |
+        //| 1000   | 8   |
+        //| 1001   | 9   |
+        //| 1010   | A   |
+        //| 1011   | B   |
+        //| 1100   | C   |
+        //| 1101   | D   |
+        //| 1110   | E   |
+        //| 1111   | F   |
 
         private byte[] FormatField(FieldDefinition fieldDef, string value)
         {
@@ -118,7 +139,7 @@ namespace Iso8583MessageBuilder.Models
                     break;
 
                 case LengthType.LLVAR:
-                    string lengthPrefix = value.Length.ToString("D2");
+                    string lengthPrefix = value.Length.ToString("D2"); // D2 vs incele
                     result.AddRange(Encoding.ASCII.GetBytes(lengthPrefix));
                     result.AddRange(Encoding.ASCII.GetBytes(value));
                     break;
@@ -135,7 +156,8 @@ namespace Iso8583MessageBuilder.Models
 
         private string ByteArrayToHexString(byte[] bytes)
         {
-            return BitConverter.ToString(bytes).Replace("-", "");
-        }
+            return BitConverter.ToString(bytes).Replace("-", ""); // byte[] bytes = { 0x70, 0x38, 0x20, 0x00 }; => "70-38-20-00" => "70382000";
+        }       
+
     }
 }

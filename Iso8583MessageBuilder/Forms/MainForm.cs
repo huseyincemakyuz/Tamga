@@ -13,7 +13,9 @@ namespace Iso8583MessageBuilder.Forms
 {
     public class MainForm : Form
     {
-        // Build Tab kontrolleri
+        #region Variables
+
+        #region Build Tab kontrolleri        
         private ComboBox cmbMessageType;
         private Panel pnlFields;
         private Button btnGenerate;
@@ -24,19 +26,23 @@ namespace Iso8583MessageBuilder.Forms
         private Button btnCopyHex;
         private Button btnSaveToFile;
         private Label lblHexLength;
+        #endregion
 
-        // TabControl
+        #region TabControl
         private TabControl tabControl;
         private TabPage tabBuild;
         private TabPage tabParse;
+        #endregion
 
-        // Parse Tab kontrolleri
+        #region Parse Tab kontrolleri
         private TextBox txtHexInput;
         private Button btnParse;
         private RichTextBox rtbParseResult;
+        #endregion
 
         private List<FieldControl> fieldControls = new List<FieldControl>();
         private Models.Iso8583MessageBuilder messageBuilder = new Models.Iso8583MessageBuilder();
+        #endregion 
 
         public MainForm()
         {
@@ -44,6 +50,7 @@ namespace Iso8583MessageBuilder.Forms
             LoadMessageTemplates();
         }
 
+        #region FrontEnd
         private void InitializeComponent()
         {
             this.Text = "ISO 8583 Message Builder";
@@ -374,7 +381,7 @@ namespace Iso8583MessageBuilder.Forms
 
             tabParse.Controls.Add(mainPanel);
         }
-
+       
         private void LoadMessageTemplates()
         {
             foreach (var template in MessageTemplates.Templates)
@@ -389,7 +396,7 @@ namespace Iso8583MessageBuilder.Forms
             if (cmbMessageType.Items.Count > 0)
                 cmbMessageType.SelectedIndex = 0;
         }
-
+        
         private void CmbMessageType_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
@@ -397,13 +404,15 @@ namespace Iso8583MessageBuilder.Forms
 
             LoadFieldsForTemplate(template);
         }
+        #endregion
 
+        #region BackEnd
         private void LoadFieldsForTemplate(MessageTemplate template)
         {
             pnlFields.Controls.Clear();
             fieldControls.Clear();
 
-            int yPos = 10;
+            int yPosition = 10;
 
             // Required fields
             foreach (var fieldNum in template.RequiredFields)
@@ -411,13 +420,13 @@ namespace Iso8583MessageBuilder.Forms
                 if (Iso8583Fields.Fields.ContainsKey(fieldNum))
                 {
                     var fieldControl = new FieldControl(Iso8583Fields.Fields[fieldNum], isRequired: true);
-                    fieldControl.Location = new Point(10, yPos);
+                    fieldControl.Location = new Point(10, yPosition);
                     fieldControl.ValueChanged += (s, ev) => UpdatePreview();
 
                     pnlFields.Controls.Add(fieldControl);
                     fieldControls.Add(fieldControl);
 
-                    yPos += fieldControl.Height + 5;
+                    yPosition += fieldControl.Height + 5;
                 }
             }
 
@@ -427,13 +436,13 @@ namespace Iso8583MessageBuilder.Forms
                 if (Iso8583Fields.Fields.ContainsKey(fieldNum))
                 {
                     var fieldControl = new FieldControl(Iso8583Fields.Fields[fieldNum], isRequired: false);
-                    fieldControl.Location = new Point(10, yPos);
+                    fieldControl.Location = new Point(10, yPosition);
                     fieldControl.ValueChanged += (s, ev) => UpdatePreview();
 
                     pnlFields.Controls.Add(fieldControl);
                     fieldControls.Add(fieldControl);
 
-                    yPos += fieldControl.Height + 5;
+                    yPosition += fieldControl.Height + 5;
                 }
             }
         }
@@ -448,7 +457,7 @@ namespace Iso8583MessageBuilder.Forms
 
                     if (fieldControls.Any(fc => fc.FieldNumber == fieldNum))
                     {
-                        MessageBox.Show("This field is already added!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("Bu alan zaten eklendi!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
@@ -495,13 +504,13 @@ namespace Iso8583MessageBuilder.Forms
                 txtHexOutput.Text = FormatHexString(hexMessage);
                 lblHexLength.Text = $"Length: {hexMessage.Length / 2} bytes ({hexMessage.Length} hex chars)";
 
-                ShowDecodedView(template.MTI);
+                ShowDecodedView(template.MTI); // alanları parse ediyoruz.
 
-                MessageBox.Show("Message generated successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Mesaj başarıyla oluşturuldu!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error generating message:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Mesaj oluşturulamadı:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -513,7 +522,7 @@ namespace Iso8583MessageBuilder.Forms
 
                 if (string.IsNullOrWhiteSpace(txtHexInput.Text))
                 {
-                    MessageBox.Show("Please enter a hex message to parse!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Lütfen parse edilecek hex mesajını giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -566,7 +575,7 @@ namespace Iso8583MessageBuilder.Forms
                 else
                 {
                     AppendColoredToParseResult("\n\n", Color.Black, false);
-                    AppendColoredToParseResult("✓ Message parsed successfully with no errors!\n", Color.Green, true);
+                    AppendColoredToParseResult("✓ Mesaj başarıyla parse edildi!\n", Color.Green, true);
                 }
             }
             catch (Exception ex)
@@ -595,7 +604,7 @@ namespace Iso8583MessageBuilder.Forms
             return template != null ? template.Name : "Unknown";
         }
 
-        private string FormatHexString(string hex)
+        private string FormatHexString(string hex) // bizim kullandığımız sekilde stringi bir satır 32 tane değer olacka şekilde ayarlıyoruz.
         {
             var sb = new StringBuilder();
             for (int i = 0; i < hex.Length; i += 32)
@@ -655,7 +664,7 @@ namespace Iso8583MessageBuilder.Forms
         {
             if (string.IsNullOrEmpty(txtHexOutput.Text))
             {
-                MessageBox.Show("No message to save!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Kaydedilecek mesaj yok. Lütfen mesaj giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -668,11 +677,12 @@ namespace Iso8583MessageBuilder.Forms
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     File.WriteAllText(sfd.FileName, txtHexOutput.Text);
-                    MessageBox.Show("Message saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Mesaj başarıyla kaydedildi!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
     }
+    #endregion
 
     public class ComboBoxItem
     {
