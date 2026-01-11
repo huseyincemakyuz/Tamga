@@ -131,7 +131,7 @@ namespace Tamga.Forms
             {
                 if (string.IsNullOrWhiteSpace(txtName.Text))
                 {
-                    MessageBox.Show("Lütfen mesaj adını giriniz!", "Validation",
+                    MessageBox.Show("Please enter your message name!", "Validation",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     this.DialogResult = DialogResult.None;
                     return;
