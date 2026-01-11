@@ -13,7 +13,7 @@ namespace Iso8583MessageBuilder.Forms
 {
     public class MainForm : Form
     {
-        #region Variables
+        #region Fiedls & Properties
 
         #region Build Tab kontrolleri        
         private ComboBox cmbMessageType;
@@ -32,6 +32,7 @@ namespace Iso8583MessageBuilder.Forms
         private TabControl tabControl;
         private TabPage tabBuild;
         private TabPage tabParse;
+        private TabPage tabHistory;
         #endregion
 
         #region Parse Tab kontrolleri
@@ -40,17 +41,42 @@ namespace Iso8583MessageBuilder.Forms
         private RichTextBox rtbParseResult;
         #endregion
 
+        #region History Tab Kontrolleri
+        private DataGridView dgvMessages;
+        private TextBox txtSearch;
+        private RichTextBox rtbMessageDetail;
+        private Button btnLoadToBuild;
+        private Button btnLoadToParse;
+        private Button btnDeleteMessage;
+        private Button btnExportMessage;
+        #endregion
+
+        #region Storage
+        private MessageStorageManager storageManager;
+        private List<SavedMessage> currentMessages;
+        #endregion
+
+        #region Status Bar
+        private StatusStrip statusStrip;
+        private ToolStripStatusLabel lblVersion;
+        private ToolStripStatusLabel lblCredit;
+        private ToolStripStatusLabel lblStatus;
+        #endregion
+
         private List<FieldControl> fieldControls = new List<FieldControl>();
         private Models.Iso8583MessageBuilder messageBuilder = new Models.Iso8583MessageBuilder();
         #endregion 
 
+        #region Constructor & Initialization
         public MainForm()
         {
+            storageManager = new MessageStorageManager(); 
+            currentMessages = new List<SavedMessage>();
+
             InitializeComponent();
             LoadMessageTemplates();
         }
-
-        #region FrontEnd
+        
         private void InitializeComponent()
         {
             this.Text = "ISO 8583 Message Builder";
@@ -72,10 +98,19 @@ namespace Iso8583MessageBuilder.Forms
             tabParse = new TabPage("Parse Message");
             InitializeParseTab();
 
+            // Tab 3: Message History
+            tabHistory = new TabPage("Message History");
+            InitializeHistoryTab();
+
+            // Status Bar
+            InitializeStatusBar();
+
             tabControl.TabPages.Add(tabBuild);
             tabControl.TabPages.Add(tabParse);
+            tabControl.TabPages.Add(tabHistory);
 
             this.Controls.Add(tabControl);
+            this.Controls.Add(statusStrip);
         }
 
         private void InitializeBuildTab()
@@ -172,7 +207,22 @@ namespace Iso8583MessageBuilder.Forms
             };
             btnClear.Click += BtnClear_Click;
 
-            buttonPanel.Controls.AddRange(new Control[] { btnAddField, btnGenerate, btnClear });
+            // YENİ: Save Message butonu
+            var btnSaveMessage = new Button
+            {
+                Location = new Point(420, 8),
+                Text = "💾 Save Message",
+                Width = 130,
+                Height = 32,
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnSaveMessage.FlatAppearance.BorderSize = 0;
+            btnSaveMessage.Click += BtnSaveMessage_Click;
+
+            buttonPanel.Controls.AddRange(new Control[] { btnAddField, btnGenerate, btnClear, btnSaveMessage });
 
             middlePanel.Controls.AddRange(new Control[] { pnlFields, buttonPanel, lblFields });
 
@@ -351,7 +401,22 @@ namespace Iso8583MessageBuilder.Forms
                 rtbParseResult.Clear();
             };
 
-            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse });
+            // YENİ: Save Parsed Message butonu
+            var btnSaveParsed = new Button
+            {
+                Location = new Point(320, 10),
+                Text = "💾 Save",
+                Width = 100,
+                Height = 35,
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnSaveParsed.FlatAppearance.BorderSize = 0;
+            btnSaveParsed.Click += BtnSaveParsedMessage_Click;
+
+            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse, btnSaveParsed });
 
             // Result Label
             var lblResult = new Label
@@ -381,7 +446,322 @@ namespace Iso8583MessageBuilder.Forms
 
             tabParse.Controls.Add(mainPanel);
         }
-       
+
+        private void InitializeHistoryTab()
+        {
+            var mainPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(10)
+            };
+
+            // Top Panel - Search
+            var topPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 50,
+                Padding = new Padding(5)
+            };
+
+            var lblSearch = new Label
+            {
+                Location = new Point(5, 12),
+                Text = "🔍 Search:",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            txtSearch = new TextBox
+            {
+                Location = new Point(85, 10),
+                Width = 300,
+                Font = new Font("Segoe UI", 10)
+            };
+            txtSearch.TextChanged += TxtSearch_TextChanged;
+
+            var btnRefresh = new Button
+            {
+                Location = new Point(395, 8),
+                Text = "🔄 Refresh",
+                Width = 100,
+                Height = 30,
+                Font = new Font("Segoe UI", 9)
+            };
+            btnRefresh.Click += (s, e) => LoadSavedMessages();
+
+            topPanel.Controls.AddRange(new Control[] { lblSearch, txtSearch, btnRefresh });
+
+            // Middle Panel - DataGridView
+            var middlePanel = new Panel
+            {
+                Dock = DockStyle.Fill
+            };
+
+            dgvMessages = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                AutoGenerateColumns = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                RowHeadersVisible = false,
+                BackgroundColor = Color.White,
+                Font = new Font("Segoe UI", 9),
+                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = Color.FromArgb(245, 245, 245)
+                }
+            };
+
+            // Columns
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Id",
+                HeaderText = "ID",
+                DataPropertyName = "Id",
+                Visible = false
+            });
+
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Name",
+                HeaderText = "Message Name",
+                DataPropertyName = "Name",
+                Width = 250,
+                DefaultCellStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 9, FontStyle.Bold) }
+            });
+
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "MTI",
+                HeaderText = "MTI",
+                DataPropertyName = "MTI",
+                Width = 60
+            });
+
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Timestamp",
+                HeaderText = "Date/Time",
+                DataPropertyName = "Timestamp",
+                Width = 150,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
+            });
+
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Tags",
+                HeaderText = "Tags",
+                DataPropertyName = "Tags",
+                Width = 200
+            });
+
+            dgvMessages.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "FieldCount",
+                HeaderText = "Fields",
+                DataPropertyName = "FieldCount",
+                Width = 60
+            });
+
+            dgvMessages.SelectionChanged += DgvMessages_SelectionChanged;
+            dgvMessages.CellDoubleClick += DgvMessages_CellDoubleClick;
+
+            middlePanel.Controls.Add(dgvMessages);
+
+            // Bottom Panel - Details & Actions
+            var bottomPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 300,
+                Padding = new Padding(5),
+                BackColor = Color.FromArgb(250, 250, 250)
+            };
+
+            var lblDetail = new Label
+            {
+                Text = "Message Details:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 25
+            };
+
+            var buttonPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 40
+            };
+
+            btnLoadToBuild = new Button
+            {
+                Location = new Point(5, 5),
+                Text = "📤 Load to Build",
+                Width = 130,
+                Height = 30,
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnLoadToBuild.FlatAppearance.BorderSize = 0;
+            btnLoadToBuild.Click += BtnLoadToBuild_Click;
+
+            btnLoadToParse = new Button
+            {
+                Location = new Point(145, 5),
+                Text = "🔍 Load to Parse",
+                Width = 130,
+                Height = 30,
+                Font = new Font("Segoe UI", 9)
+            };
+            btnLoadToParse.Click += BtnLoadToParse_Click;
+
+            btnDeleteMessage = new Button
+            {
+                Location = new Point(285, 5),
+                Text = "🗑️ Delete",
+                Width = 100,
+                Height = 30,
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnDeleteMessage.FlatAppearance.BorderSize = 0;
+            btnDeleteMessage.Click += BtnDeleteMessage_Click;
+
+            btnExportMessage = new Button
+            {
+                Location = new Point(395, 5),
+                Text = "📋 Copy Hex",
+                Width = 110,
+                Height = 30,
+                Font = new Font("Segoe UI", 9)
+            };
+            btnExportMessage.Click += BtnExportMessage_Click;
+
+            buttonPanel.Controls.AddRange(new Control[]
+            {
+        btnLoadToBuild, btnLoadToParse, btnDeleteMessage, btnExportMessage
+            });
+
+            rtbMessageDetail = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 9),
+                ReadOnly = true,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            bottomPanel.Controls.Add(rtbMessageDetail);
+            bottomPanel.Controls.Add(buttonPanel);
+            bottomPanel.Controls.Add(lblDetail);
+
+            // Splitter
+            var splitter = new Splitter
+            {
+                Dock = DockStyle.Bottom,
+                Height = 5,
+                BackColor = Color.Gray
+            };
+
+            mainPanel.Controls.Add(middlePanel);
+            mainPanel.Controls.Add(splitter);
+            mainPanel.Controls.Add(bottomPanel);
+            mainPanel.Controls.Add(topPanel);
+
+            tabHistory.Controls.Add(mainPanel);
+
+            // Load messages when tab is selected
+            tabControl.SelectedIndexChanged += (s, e) =>
+            {
+                if (tabControl.SelectedTab == tabHistory)
+                {
+                    LoadSavedMessages();
+                }
+            };
+        }
+
+        private void InitializeStatusBar()
+        {
+            statusStrip = new StatusStrip
+            {
+                Dock = DockStyle.Bottom,
+                BackColor = Color.FromArgb(240, 240, 240),
+                Font = new Font("Segoe UI", 8),
+                Padding = new Padding(5, 0, 5, 0)
+            };
+
+            // Version
+            lblVersion = new ToolStripStatusLabel
+            {
+                Text = "v1.0.0",
+                ForeColor = Color.FromArgb(100, 100, 100),
+                Font = new Font("Segoe UI", 8, FontStyle.Bold)
+            };
+
+            // Separator 1
+            var lblSeparator1 = new ToolStripStatusLabel
+            {
+                Text = "|",
+                ForeColor = Color.LightGray,
+                Margin = new Padding(5, 0, 5, 0)
+            };
+
+            // Credit
+            lblCredit = new ToolStripStatusLabel
+            {
+                Text = "Created by Hüseyin Cem Akyüz",
+                ForeColor = Color.FromArgb(100, 100, 100)
+            };
+
+            // Separator 2
+            var lblSeparator2 = new ToolStripStatusLabel
+            {
+                Text = "|",
+                ForeColor = Color.LightGray,
+                Margin = new Padding(5, 0, 5, 0)
+            };
+
+            // Year
+            var lblYear = new ToolStripStatusLabel
+            {
+                Text = $"© {DateTime.Now.Year}",
+                ForeColor = Color.FromArgb(100, 100, 100)
+            };
+
+            // Spring (boşluk - sağa yaslamak için)
+            var spring = new ToolStripStatusLabel
+            {
+                Spring = true,
+                TextAlign = ContentAlignment.MiddleRight
+            };
+
+            // Status (sağda)
+            lblStatus = new ToolStripStatusLabel
+            {
+                Text = "Ready",
+                ForeColor = Color.Green,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Image = null
+            };
+
+            // Tümünü ekle
+            statusStrip.Items.AddRange(new ToolStripItem[]
+            {
+                lblVersion,
+                lblSeparator1,
+                lblCredit,
+                lblSeparator2,
+                lblYear,
+                spring,
+                lblStatus
+            });
+        }
+
         private void LoadMessageTemplates()
         {
             foreach (var template in MessageTemplates.Templates)
@@ -396,17 +776,10 @@ namespace Iso8583MessageBuilder.Forms
             if (cmbMessageType.Items.Count > 0)
                 cmbMessageType.SelectedIndex = 0;
         }
-        
-        private void CmbMessageType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
-            var template = (MessageTemplate)selected.Value;
 
-            LoadFieldsForTemplate(template);
-        }
         #endregion
-
-        #region BackEnd
+       
+        #region Build Tab - Field Management
         private void LoadFieldsForTemplate(MessageTemplate template)
         {
             pnlFields.Controls.Clear();
@@ -445,6 +818,22 @@ namespace Iso8583MessageBuilder.Forms
                     yPosition += fieldControl.Height + 5;
                 }
             }
+        }
+
+        private void UpdatePreview()
+        {
+            // Real-time preview - opsiyonel
+        }
+        #endregion
+
+        #region Build Tab - Event Handlers
+
+        private void CmbMessageType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
+            var template = (MessageTemplate)selected.Value;
+
+            LoadFieldsForTemplate(template);
         }
 
         private void BtnAddField_Click(object sender, EventArgs e)
@@ -514,6 +903,134 @@ namespace Iso8583MessageBuilder.Forms
             }
         }
 
+        private void BtnClear_Click(object sender, EventArgs e)
+        {
+            foreach (var fieldControl in fieldControls)
+            {
+                fieldControl.SetValue(string.Empty);
+            }
+            txtHexOutput.Clear();
+            rtbDecodedView.Clear();
+            lblHexLength.Text = "";
+        }
+
+        private void BtnSaveToFile_Click(object sender, EventArgs e) // Hex string mesajı direkt bir klaösre kaydediyorum.
+        {
+            if (string.IsNullOrEmpty(txtHexOutput.Text))
+            {
+                MessageBox.Show("Kaydedilecek mesaj yok. Lütfen mesaj giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "Text Files (*.txt)|*.txt|Hex Files (*.hex)|*.hex|All Files (*.*)|*.*";
+                sfd.DefaultExt = "txt";
+                sfd.FileName = $"ISO8583_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(sfd.FileName, txtHexOutput.Text);
+                    MessageBox.Show("Mesaj başarıyla kaydedildi!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void BtnSaveMessage_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Hex mesaj var mı kontrol et
+                if (string.IsNullOrWhiteSpace(txtHexOutput.Text))
+                {
+                    MessageBox.Show("Please generate a message first!", "No Message",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Default isim oluştur
+                var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
+                var template = (MessageTemplate)selected.Value;
+                string defaultName = $"{template.Name} - {DateTime.Now:yyyyMMdd_HHmmss}";
+
+                // Save dialog aç
+                using (var dialog = new SaveMessageDialog(defaultName))
+                {
+                    if (dialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // Field'ları topla
+                        var fields = new Dictionary<int, string>();
+                        foreach (var fieldControl in fieldControls.Where(fc => fc.IsFieldEnabled))
+                        {
+                            if (!string.IsNullOrWhiteSpace(fieldControl.FieldValue))
+                            {
+                                fields[fieldControl.FieldNumber] = fieldControl.FieldValue;
+                            }
+                        }
+
+                        // SavedMessage oluştur
+                        var savedMessage = new SavedMessage
+                        {
+                            Name = dialog.MessageName,
+                            MTI = template.MTI,
+                            HexMessage = txtHexOutput.Text.Replace(Environment.NewLine, "").Replace(" ", ""),
+                            Fields = fields,
+                            Tags = dialog.Tags?.ToList() ?? new List<string>(),
+                            Notes = dialog.Notes
+                        };
+
+                        // Kaydet
+                        storageManager.AddMessage(savedMessage);
+
+                        MessageBox.Show($"Message '{savedMessage.Name}' saved successfully!", "Success",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving message: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        } // json formatında mesajları kaydediyorum
+
+        #endregion
+
+        #region Build Tab - Display Methods
+
+        private void ShowDecodedView(string mti)
+        {
+            rtbDecodedView.Clear();
+
+            AppendColored($"MTI: {mti}\n", Color.DarkBlue, true);
+            AppendColored($"Bitmap: (Auto-generated based on fields)\n\n", Color.DarkGreen, false);
+
+            AppendColored("Fields:\n", Color.Black, true);
+            AppendColored("─────────────────────────────────────────────────────\n", Color.Gray, false);
+
+            foreach (var fieldControl in fieldControls.Where(fc => fc.IsFieldEnabled && !string.IsNullOrWhiteSpace(fc.FieldValue)))
+            {
+                AppendColored($"F{fieldControl.FieldNumber:D3} ", Color.DarkRed, true);
+                AppendColored($"({fieldControl.Definition.Name})\n", Color.Gray, false);
+                AppendColored($"     Value: ", Color.Black, false);
+                AppendColored($"{fieldControl.FieldValue}\n", Color.DarkBlue, false);
+                AppendColored($"     Type: {fieldControl.Definition.Type}, {fieldControl.Definition.LengthType}\n\n", Color.Gray, false);
+            }
+        }
+
+        private void AppendColored(string text, Color color, bool bold = false)
+        {
+            rtbDecodedView.SelectionStart = rtbDecodedView.TextLength;
+            rtbDecodedView.SelectionLength = 0;
+            rtbDecodedView.SelectionColor = color;
+            rtbDecodedView.SelectionFont = new Font(rtbDecodedView.Font, bold ? FontStyle.Bold : FontStyle.Regular);
+            rtbDecodedView.AppendText(text);
+            rtbDecodedView.SelectionColor = rtbDecodedView.ForeColor;
+        }
+
+        #endregion
+
+        #region Parse Tab - Event Handlers
         private void BtnParse_Click(object sender, EventArgs e)
         {
             try
@@ -588,6 +1105,72 @@ namespace Iso8583MessageBuilder.Forms
             }
         }
 
+        private void BtnSaveParsedMessage_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Parse edilmiş mesaj var mı kontrol et
+                if (string.IsNullOrWhiteSpace(txtHexInput.Text))
+                {
+                    MessageBox.Show("Please parse a message first!", "No Message",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Mesajı parse et
+                var parser = new Iso8583MessageParser();
+                var parsedMessage = parser.Parse(txtHexInput.Text);
+
+                if (parsedMessage.Errors.Count > 0)
+                {
+                    var result = MessageBox.Show(
+                        "The message has parsing errors. Do you still want to save it?",
+                        "Parsing Errors",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.No)
+                        return;
+                }
+
+                // Default isim oluştur
+                string defaultName = $"Parsed {parsedMessage.MTI} - {DateTime.Now:yyyyMMdd_HHmmss}";
+
+                // Save dialog aç
+                using (var dialog = new SaveMessageDialog(defaultName))
+                {
+                    if (dialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // SavedMessage oluştur
+                        var savedMessage = new SavedMessage
+                        {
+                            Name = dialog.MessageName,
+                            MTI = parsedMessage.MTI,
+                            HexMessage = txtHexInput.Text.Replace(Environment.NewLine, "").Replace(" ", ""),
+                            Fields = parsedMessage.Fields,
+                            Tags = dialog.Tags?.ToList() ?? new List<string>(),
+                            Notes = dialog.Notes
+                        };
+
+                        // Kaydet
+                        storageManager.AddMessage(savedMessage);
+
+                        MessageBox.Show($"Message '{savedMessage.Name}' saved successfully!", "Success",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving message: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
+        #region Parse Tab - Display Methods
+
         private void AppendColoredToParseResult(string text, Color color, bool bold = false)
         {
             rtbParseResult.SelectionStart = rtbParseResult.TextLength;
@@ -604,6 +1187,350 @@ namespace Iso8583MessageBuilder.Forms
             return template != null ? template.Name : "Unknown";
         }
 
+        #endregion
+
+        #region History Tab - Data Management
+        private void LoadSavedMessages()
+        {
+            try
+            {
+                currentMessages = storageManager.LoadMessages();
+
+                // DataGridView'e bind et
+                var displayList = currentMessages.Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.MTI,
+                    m.Timestamp,
+                    Tags = m.Tags != null && m.Tags.Count > 0 ? string.Join(", ", m.Tags) : "",
+                    FieldCount = m.Fields?.Count ?? 0
+                }).ToList();
+
+                dgvMessages.DataSource = displayList;
+
+                // İlk satırı seç
+                if (dgvMessages.Rows.Count > 0)
+                {
+                    dgvMessages.Rows[0].Selected = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading messages: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void TxtSearch_TextChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtSearch.Text))
+            {
+                LoadSavedMessages();
+                return;
+            }
+
+            try
+            {
+                var filtered = storageManager.SearchMessages(txtSearch.Text);
+
+                var displayList = filtered.Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.MTI,
+                    m.Timestamp,
+                    Tags = m.Tags != null && m.Tags.Count > 0 ? string.Join(", ", m.Tags) : "",
+                    FieldCount = m.Fields?.Count ?? 0
+                }).ToList();
+
+                dgvMessages.DataSource = displayList;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error searching: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
+        #region History Tab - Event Handlers
+
+        private void DgvMessages_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvMessages.SelectedRows.Count == 0)
+            {
+                rtbMessageDetail.Clear();
+                return;
+            }
+
+            try
+            {
+                var row = dgvMessages.SelectedRows[0];
+                var messageId = row.Cells["Id"].Value?.ToString();
+                var message = currentMessages.FirstOrDefault(m => m.Id == messageId);
+
+                if (message == null) return;
+
+                // Display message details
+                rtbMessageDetail.Clear();
+
+                AppendColoredHistory($"📋 {message.Name}\n\n", Color.DarkBlue, true);
+                AppendColoredHistory($"MTI: {message.MTI}\n", Color.Black, false);
+                AppendColoredHistory($"Saved: {message.Timestamp:yyyy-MM-dd HH:mm:ss}\n", Color.Gray, false);
+
+                if (message.Tags != null && message.Tags.Count > 0)
+                {
+                    AppendColoredHistory($"Tags: {string.Join(", ", message.Tags)}\n", Color.DarkCyan, false);
+                }
+
+                if (!string.IsNullOrEmpty(message.Notes))
+                {
+                    AppendColoredHistory($"Notes: {message.Notes}\n", Color.Gray, false);
+                }
+
+                AppendColoredHistory("\nHex Message:\n", Color.Black, true);
+                AppendColoredHistory($"{FormatHexString(message.HexMessage)}\n", Color.DarkGreen, false);
+
+                if (message.Fields != null && message.Fields.Count > 0)
+                {
+                    AppendColoredHistory($"\nFields ({message.Fields.Count}):\n", Color.Black, true);
+                    AppendColoredHistory("─────────────────────────────────────────────────────\n", Color.Gray, false);
+
+                    foreach (var field in message.Fields.OrderBy(f => f.Key))
+                    {
+                        var fieldDef = Iso8583Fields.Fields.ContainsKey(field.Key)
+                            ? Iso8583Fields.Fields[field.Key]
+                            : null;
+
+                        AppendColoredHistory($"F{field.Key:D3} ", Color.DarkRed, true);
+
+                        if (fieldDef != null)
+                        {
+                            AppendColoredHistory($"- {fieldDef.Name}\n", Color.Gray, false);
+                            AppendColoredHistory($"     Type: {fieldDef.Type}, {fieldDef.LengthType}\n", Color.DarkCyan, false);
+                        }
+                        else
+                        {
+                            AppendColoredHistory($"\n", Color.Gray, false);
+                        }
+
+                        AppendColoredHistory($"     Value: ", Color.Gray, false);
+                        AppendColoredHistory($"{field.Value}\n\n", Color.DarkBlue, false);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                rtbMessageDetail.Clear();
+                AppendColoredHistory($"Error displaying message: {ex.Message}", Color.Red, false);
+            }
+        }
+
+        private void DgvMessages_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Çift tıklayınca Build tab'a yükle
+            if (e.RowIndex >= 0)
+            {
+                BtnLoadToBuild_Click(sender, e);
+            }
+        }
+
+        private void BtnLoadToBuild_Click(object sender, EventArgs e)
+        {
+            if (dgvMessages.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Please select a message first!", "Info",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                var row = dgvMessages.SelectedRows[0];
+                var messageId = row.Cells["Id"].Value?.ToString();
+                var message = currentMessages.FirstOrDefault(m => m.Id == messageId);
+
+                if (message == null) return;
+
+                // Switch to Build tab
+                tabControl.SelectedTab = tabBuild;
+
+                // Find and select matching template
+                var template = MessageTemplates.Templates.FirstOrDefault(t => t.MTI == message.MTI);
+                if (template != null)
+                {
+                    for (int i = 0; i < cmbMessageType.Items.Count; i++)
+                    {
+                        var item = (ComboBoxItem)cmbMessageType.Items[i];
+                        if (((MessageTemplate)item.Value).MTI == message.MTI)
+                        {
+                            cmbMessageType.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Load field values
+                if (message.Fields != null)
+                {
+                    foreach (var field in message.Fields)
+                    {
+                        var fieldControl = fieldControls.FirstOrDefault(fc => fc.FieldNumber == field.Key);
+                        if (fieldControl != null)
+                        {
+                            fieldControl.SetValue(field.Value);
+                        }
+                        else
+                        {
+                            // Field mevcut değilse ekle
+                            if (Iso8583Fields.Fields.ContainsKey(field.Key))
+                            {
+                                var newFieldControl = new FieldControl(Iso8583Fields.Fields[field.Key], isRequired: false);
+
+                                int yPos = fieldControls.Count > 0
+                                    ? fieldControls.Last().Location.Y + fieldControls.Last().Height + 5
+                                    : 10;
+
+                                newFieldControl.Location = new Point(10, yPos);
+                                newFieldControl.ValueChanged += (s, ev) => UpdatePreview();
+                                newFieldControl.SetValue(field.Value);
+
+                                pnlFields.Controls.Add(newFieldControl);
+                                fieldControls.Add(newFieldControl);
+                            }
+                        }
+                    }
+                }
+
+                MessageBox.Show($"Message '{message.Name}' loaded to Build tab!", "Success",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading message: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnLoadToParse_Click(object sender, EventArgs e)
+        {
+            if (dgvMessages.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Please select a message first!", "Info",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                var row = dgvMessages.SelectedRows[0];
+                var messageId = row.Cells["Id"].Value?.ToString();
+                var message = currentMessages.FirstOrDefault(m => m.Id == messageId);
+
+                if (message == null) return;
+
+                // Switch to Parse tab
+                tabControl.SelectedTab = tabParse;
+
+                // Load hex to input
+                txtHexInput.Text = message.HexMessage;
+
+                // Auto-parse
+                BtnParse_Click(sender, e);
+
+                MessageBox.Show($"Message '{message.Name}' loaded to Parse tab!", "Success",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading message: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnDeleteMessage_Click(object sender, EventArgs e)
+        {
+            if (dgvMessages.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Please select a message first!", "Info",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                var row = dgvMessages.SelectedRows[0];
+                var messageId = row.Cells["Id"].Value?.ToString();
+                var message = currentMessages.FirstOrDefault(m => m.Id == messageId);
+
+                if (message == null) return;
+
+                var result = MessageBox.Show(
+                    $"Are you sure you want to delete '{message.Name}'?\n\nThis action cannot be undone.",
+                    "Confirm Delete",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    storageManager.DeleteMessage(message.Id);
+                    LoadSavedMessages();
+                    MessageBox.Show("Message deleted successfully!", "Success",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting message: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnExportMessage_Click(object sender, EventArgs e)
+        {
+            if (dgvMessages.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Please select a message first!", "Info",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                var row = dgvMessages.SelectedRows[0];
+                var messageId = row.Cells["Id"].Value?.ToString();
+                var message = currentMessages.FirstOrDefault(m => m.Id == messageId);
+
+                if (message == null) return;
+
+                Clipboard.SetText(message.HexMessage);
+                MessageBox.Show("Hex message copied to clipboard!", "Success",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error copying: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
+        #region History Tab - Display Methods
+        private void AppendColoredHistory(string text, Color color, bool bold = false)
+        {
+            rtbMessageDetail.SelectionStart = rtbMessageDetail.TextLength;
+            rtbMessageDetail.SelectionLength = 0;
+            rtbMessageDetail.SelectionColor = color;
+            rtbMessageDetail.SelectionFont = new Font(rtbMessageDetail.Font, bold ? FontStyle.Bold : FontStyle.Regular);
+            rtbMessageDetail.AppendText(text);
+            rtbMessageDetail.SelectionColor = rtbMessageDetail.ForeColor;
+        }
+        #endregion
+
+        #region Helper Methods
         private string FormatHexString(string hex) // bizim kullandığımız sekilde stringi bir satır 32 tane değer olacka şekilde ayarlıyoruz.
         {
             var sb = new StringBuilder();
@@ -614,75 +1541,9 @@ namespace Iso8583MessageBuilder.Forms
             return sb.ToString();
         }
 
-        private void ShowDecodedView(string mti)
-        {
-            rtbDecodedView.Clear();
+        #endregion
 
-            AppendColored($"MTI: {mti}\n", Color.DarkBlue, true);
-            AppendColored($"Bitmap: (Auto-generated based on fields)\n\n", Color.DarkGreen, false);
-
-            AppendColored("Fields:\n", Color.Black, true);
-            AppendColored("─────────────────────────────────────────────────────\n", Color.Gray, false);
-
-            foreach (var fieldControl in fieldControls.Where(fc => fc.IsFieldEnabled && !string.IsNullOrWhiteSpace(fc.FieldValue)))
-            {
-                AppendColored($"F{fieldControl.FieldNumber:D3} ", Color.DarkRed, true);
-                AppendColored($"({fieldControl.Definition.Name})\n", Color.Gray, false);
-                AppendColored($"     Value: ", Color.Black, false);
-                AppendColored($"{fieldControl.FieldValue}\n", Color.DarkBlue, false);
-                AppendColored($"     Type: {fieldControl.Definition.Type}, {fieldControl.Definition.LengthType}\n\n", Color.Gray, false);
-            }
-        }
-
-        private void AppendColored(string text, Color color, bool bold = false)
-        {
-            rtbDecodedView.SelectionStart = rtbDecodedView.TextLength;
-            rtbDecodedView.SelectionLength = 0;
-            rtbDecodedView.SelectionColor = color;
-            rtbDecodedView.SelectionFont = new Font(rtbDecodedView.Font, bold ? FontStyle.Bold : FontStyle.Regular);
-            rtbDecodedView.AppendText(text);
-            rtbDecodedView.SelectionColor = rtbDecodedView.ForeColor;
-        }
-
-        private void UpdatePreview()
-        {
-            // Real-time preview - opsiyonel
-        }
-
-        private void BtnClear_Click(object sender, EventArgs e)
-        {
-            foreach (var fieldControl in fieldControls)
-            {
-                fieldControl.SetValue(string.Empty);
-            }
-            txtHexOutput.Clear();
-            rtbDecodedView.Clear();
-            lblHexLength.Text = "";
-        }
-
-        private void BtnSaveToFile_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(txtHexOutput.Text))
-            {
-                MessageBox.Show("Kaydedilecek mesaj yok. Lütfen mesaj giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            using (var sfd = new SaveFileDialog())
-            {
-                sfd.Filter = "Text Files (*.txt)|*.txt|Hex Files (*.hex)|*.hex|All Files (*.*)|*.*";
-                sfd.DefaultExt = "txt";
-                sfd.FileName = $"ISO8583_{DateTime.Now:yyyyMMdd_HHmmss}";
-
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    File.WriteAllText(sfd.FileName, txtHexOutput.Text);
-                    MessageBox.Show("Mesaj başarıyla kaydedildi!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-        }
     }
-    #endregion
 
     public class ComboBoxItem
     {
