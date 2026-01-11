@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Iso8583MessageBuilder.Forms
+namespace Tamga.Forms
 {
     public class SaveMessageDialog : Form
     {

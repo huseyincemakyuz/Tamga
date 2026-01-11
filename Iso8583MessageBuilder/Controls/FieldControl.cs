@@ -2,9 +2,9 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Iso8583MessageBuilder.Models;
+using Tamga.Models;
 
-namespace Iso8583MessageBuilder.Controls
+namespace Tamga.Controls
 {
     public class FieldControl : UserControl
     {

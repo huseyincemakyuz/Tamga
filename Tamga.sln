@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iso8583MessageBuilder", "Iso8583MessageBuilder\Iso8583MessageBuilder.csproj", "{EA66197F-D290-46F4-B2C1-DB8D34C4F42F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tamga", "Iso8583MessageBuilder\Tamga.csproj", "{EA66197F-D290-46F4-B2C1-DB8D34C4F42F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

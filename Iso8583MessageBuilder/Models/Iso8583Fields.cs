@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Iso8583MessageBuilder.Models
+namespace Tamga.Models
 {
     public static class Iso8583Fields
     {

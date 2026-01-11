@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Iso8583MessageBuilder.Models
+namespace Tamga.Models
 {
     public class MessageStorageManager
     {
         private static readonly string StorageFilePath =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                        "Iso8583MessageBuilder",
+                        "Tamga",
                         "messages.json");
 
         public MessageStorageManager()

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using Iso8583MessageBuilder.Forms;
+using Tamga.Forms;
 
-namespace Iso8583MessageBuilder
+namespace Tamga
 {
     static class Program
     {

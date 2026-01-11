@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EA66197F-D290-46F4-B2C1-DB8D34C4F42F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Iso8583MessageBuilder</RootNamespace>
-    <AssemblyName>Iso8583MessageBuilder</AssemblyName>
+    <RootNamespace>Tamga</RootNamespace>
+    <AssemblyName>Tamga</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -78,6 +78,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

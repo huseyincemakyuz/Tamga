@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Iso8583MessageBuilder.Models
+namespace Tamga.Models
 {
     public enum FieldType
     {

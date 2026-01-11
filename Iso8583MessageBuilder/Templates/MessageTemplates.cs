@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Iso8583MessageBuilder.Templates
+namespace Tamga.Templates
 {
     public class MessageTemplate
     {

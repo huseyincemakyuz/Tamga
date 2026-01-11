@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Iso8583MessageBuilder.Models
+namespace Tamga.Models
 {
-    public class Iso8583MessageBuilder
+    public class Tamga
     {
         private string _mti;
         private Dictionary<int, string> _fields = new Dictionary<int, string>();
 
-        public Iso8583MessageBuilder SetMTI(string mti)
+        public Tamga SetMTI(string mti)
         {
             if (mti.Length != 4)
                 throw new ArgumentException("MTI must be a 4-digit number.");
@@ -19,7 +19,7 @@ namespace Iso8583MessageBuilder.Models
             return this;
         }
 
-        public Iso8583MessageBuilder SetField(int fieldNumber, string value)
+        public Tamga SetField(int fieldNumber, string value)
         {
             if (!Iso8583Fields.Fields.ContainsKey(fieldNumber))
                 throw new ArgumentException($"The field {fieldNumber} is not defined!");

@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Iso8583MessageBuilder.Controls;
-using Iso8583MessageBuilder.Models;
-using Iso8583MessageBuilder.Templates;
+using Tamga.Controls;
+using Tamga.Models;
+using Tamga.Templates;
 
-namespace Iso8583MessageBuilder.Forms
+namespace Tamga.Forms
 {
     public class MainForm : Form
     {
@@ -64,7 +64,7 @@ namespace Iso8583MessageBuilder.Forms
         #endregion
 
         private List<FieldControl> fieldControls = new List<FieldControl>();
-        private Models.Iso8583MessageBuilder messageBuilder = new Models.Iso8583MessageBuilder();
+        private Models.Tamga messageBuilder = new Models.Tamga();
         #endregion 
 
         #region Constructor & Initialization
@@ -79,7 +79,7 @@ namespace Iso8583MessageBuilder.Forms
         
         private void InitializeComponent()
         {
-            this.Text = "ISO 8583 Message Builder";
+            this.Text = "TAMGA - ISO 8583 Message Builder";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
 
@@ -698,7 +698,7 @@ namespace Iso8583MessageBuilder.Forms
             // Version
             lblVersion = new ToolStripStatusLabel
             {
-                Text = "v1.0.0",
+                Text = "TAMGA v1.0.0",
                 ForeColor = Color.FromArgb(100, 100, 100),
                 Font = new Font("Segoe UI", 8, FontStyle.Bold)
             };
@@ -877,7 +877,7 @@ namespace Iso8583MessageBuilder.Forms
                 var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
                 var template = (MessageTemplate)selected.Value;
 
-                messageBuilder = new Models.Iso8583MessageBuilder();
+                messageBuilder = new Models.Tamga();
                 messageBuilder.SetMTI(template.MTI);
 
                 foreach (var fieldControl in fieldControls.Where(fc => fc.IsFieldEnabled))

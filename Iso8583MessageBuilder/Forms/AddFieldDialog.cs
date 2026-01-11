@@ -2,9 +2,9 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Iso8583MessageBuilder.Models;
+using Tamga.Models;
 
-namespace Iso8583MessageBuilder.Forms
+namespace Tamga.Forms
 {
     public class AddFieldDialog : Form
     {
