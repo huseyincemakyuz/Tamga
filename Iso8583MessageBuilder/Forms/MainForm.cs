@@ -1035,7 +1035,7 @@ namespace Tamga.Forms
         {
             try
             {
-                rtbParseResult.Clear();
+                rtbParseResult.Clear(); 
 
                 if (string.IsNullOrWhiteSpace(txtHexInput.Text))
                 {
