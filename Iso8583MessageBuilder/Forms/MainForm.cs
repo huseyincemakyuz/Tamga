@@ -846,7 +846,7 @@ namespace Iso8583MessageBuilder.Forms
 
                     if (fieldControls.Any(fc => fc.FieldNumber == fieldNum))
                     {
-                        MessageBox.Show("Bu alan zaten eklendi!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("This field already added!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
@@ -895,11 +895,11 @@ namespace Iso8583MessageBuilder.Forms
 
                 ShowDecodedView(template.MTI); // alanları parse ediyoruz.
 
-                MessageBox.Show("Mesaj başarıyla oluşturuldu!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Message created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Mesaj oluşturulamadı:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error, message could not be created:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -918,7 +918,7 @@ namespace Iso8583MessageBuilder.Forms
         {
             if (string.IsNullOrEmpty(txtHexOutput.Text))
             {
-                MessageBox.Show("Kaydedilecek mesaj yok. Lütfen mesaj giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("There are no messages to save. Please enter a message!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -931,7 +931,7 @@ namespace Iso8583MessageBuilder.Forms
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     File.WriteAllText(sfd.FileName, txtHexOutput.Text);
-                    MessageBox.Show("Mesaj başarıyla kaydedildi!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Message saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
@@ -1039,7 +1039,7 @@ namespace Iso8583MessageBuilder.Forms
 
                 if (string.IsNullOrWhiteSpace(txtHexInput.Text))
                 {
-                    MessageBox.Show("Lütfen parse edilecek hex mesajını giriniz!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Please enter the hex message to be parsed!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -1092,7 +1092,7 @@ namespace Iso8583MessageBuilder.Forms
                 else
                 {
                     AppendColoredToParseResult("\n\n", Color.Black, false);
-                    AppendColoredToParseResult("✓ Mesaj başarıyla parse edildi!\n", Color.Green, true);
+                    AppendColoredToParseResult("✓ The message has been successfully parsed!\n", Color.Green, true);
                 }
             }
             catch (Exception ex)

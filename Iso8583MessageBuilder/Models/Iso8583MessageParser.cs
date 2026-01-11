@@ -32,7 +32,7 @@ namespace Iso8583MessageBuilder.Models
                 // 1. Parse MTI (4 ASCII karakter = 4 bytes)
                 if (messageBytes.Length < 4)
                 {
-                    result.Errors.Add("Message çok kısa - MTI okunamıyor!");
+                    result.Errors.Add("The message is too short - the MTI is unreadable!");
                     return result;
                 }
 
@@ -42,7 +42,7 @@ namespace Iso8583MessageBuilder.Models
                 // 2. Parse Primary Bitmap (8 bytes = 64 bits)
                 if (messageBytes.Length < position + 8)
                 {
-                    result.Errors.Add("Message çok kısa - bitmap okunamıyor!");
+                    result.Errors.Add("The message is too short - the bitmap is unreadable!");
                     return result;
                 }
 
@@ -59,7 +59,7 @@ namespace Iso8583MessageBuilder.Models
                 {
                     if (messageBytes.Length < position + 8)
                     {
-                        result.Errors.Add("Secondary bitmap belirtilmiş ama mevcut değil!");
+                        result.Errors.Add("A secondary bitmap has been specified but is not available!");
                         return result;
                     }
 
@@ -87,7 +87,7 @@ namespace Iso8583MessageBuilder.Models
                     {
                         if (!Iso8583Fields.Fields.ContainsKey(fieldNum))
                         {
-                            result.Errors.Add($"Field {fieldNum} alanı ayarlanmış ancak tanımlanmamış");
+                            result.Errors.Add($"The field {fieldNum} is set but not defined.");
                             continue;
                         }
 
@@ -100,14 +100,14 @@ namespace Iso8583MessageBuilder.Models
                         }
                         catch (Exception ex)
                         {
-                            result.Errors.Add($"Alan parse edilemedi {fieldNum}: {ex.Message}");
+                            result.Errors.Add($"Field could not be parsed  {fieldNum}: {ex.Message}");
                         }
                     }
                 }
 
                 if (position < messageBytes.Length)
                 {
-                    result.Errors.Add($"Warning: {messageBytes.Length - position} parse sonrası kalan byte'lar");
+                    result.Errors.Add($"Warning: {messageBytes.Length - position} bytes remaining after parsing");
                 }
             }
             catch (Exception ex)
@@ -129,7 +129,7 @@ namespace Iso8583MessageBuilder.Models
                     fieldLength = fieldDef.MaxLength;
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"Fixed alan için yeterli veri yok ({fieldLength} byte gereli)");
+                        throw new Exception($"Not enough data for the fixed field ({fieldLength} bytes required)");
                     }
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
                     position += fieldLength;
@@ -138,19 +138,19 @@ namespace Iso8583MessageBuilder.Models
                 case LengthType.LLVAR:
                     if (position + 2 > messageBytes.Length)
                     {
-                        throw new Exception("LLVAR uzunluk öneki için yeterli veri yok.");
+                        throw new Exception("Not enough data is available to read the LLVAR length prefix.");
                     }
                     string lengthStr = Encoding.ASCII.GetString(messageBytes, position, 2);
                     position += 2;
 
                     if (!int.TryParse(lengthStr, out fieldLength))
                     {
-                        throw new Exception($"Geçersiz LLVAR uzunluğu: {lengthStr}");
+                        throw new Exception($"Invalid LLVAR length: {lengthStr}");
                     }
 
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"LLVAR alanı için yeterli veri yok. ({fieldLength} byte gereli)");
+                        throw new Exception($"Not enough data is available to read the LLVAR length prefix. ({fieldLength} bytes required)");
                     }
 
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
@@ -160,19 +160,19 @@ namespace Iso8583MessageBuilder.Models
                 case LengthType.LLLVAR:
                     if (position + 3 > messageBytes.Length)
                     {
-                        throw new Exception("LLLVAR uzunluk öneki için yeterli veri yok.");
+                        throw new Exception("Not enough data is available to read the LLLVAR length prefix.");
                     }
                     string lengthStr3 = Encoding.ASCII.GetString(messageBytes, position, 3);
                     position += 3;
 
                     if (!int.TryParse(lengthStr3, out fieldLength))
                     {
-                        throw new Exception($"Geçersiz LLLVAR uzunluğu: {lengthStr3}");
+                        throw new Exception($"Invalid LLLVAR length: {lengthStr3}");
                     }
 
                     if (position + fieldLength > messageBytes.Length)
                     {
-                        throw new Exception($"LLLVAR alanı için yeterli veri yok. ({fieldLength} byte gereli)");
+                        throw new Exception($"Not enough data is available to read the LLLVAR length prefix. ({fieldLength} bytes required)");
                     }
 
                     value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
@@ -204,7 +204,7 @@ namespace Iso8583MessageBuilder.Models
         {
             if (hex.Length % 2 != 0) // Hex formatta 1 byte = 2 hex karakter
             {
-                throw new ArgumentException("Hex string uzunluğu çift olmalıdır!");
+                throw new ArgumentException("The hex string length must be even!");
             }
 
             byte[] bytes = new byte[hex.Length / 2];

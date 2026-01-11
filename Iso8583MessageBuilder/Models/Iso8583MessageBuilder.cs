@@ -13,7 +13,7 @@ namespace Iso8583MessageBuilder.Models
         public Iso8583MessageBuilder SetMTI(string mti)
         {
             if (mti.Length != 4)
-                throw new ArgumentException("MTI 4 haneli olmalıdır.");
+                throw new ArgumentException("MTI must be a 4-digit number.");
 
             _mti = mti;
             return this;
@@ -22,7 +22,7 @@ namespace Iso8583MessageBuilder.Models
         public Iso8583MessageBuilder SetField(int fieldNumber, string value)
         {
             if (!Iso8583Fields.Fields.ContainsKey(fieldNumber))
-                throw new ArgumentException($"Alan {fieldNumber} tanımlı değil!");
+                throw new ArgumentException($"The field {fieldNumber} is not defined!");
 
             _fields[fieldNumber] = value;
             return this;
@@ -31,7 +31,7 @@ namespace Iso8583MessageBuilder.Models
         public string BuildHexString()
         {
             if (string.IsNullOrEmpty(_mti))
-                throw new InvalidOperationException("MTI tanımlanmak zorunda!");
+                throw new InvalidOperationException("MTI must be defined!");
 
             var messageBytes = new List<byte>();
 
