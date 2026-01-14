@@ -5,12 +5,12 @@ using System.Text;
 
 namespace Tamga.Models
 {
-    public class Tamga
+    public class Iso8583MessageBuilder
     {
         private string _mti;
         private Dictionary<int, string> _fields = new Dictionary<int, string>();
 
-        public Tamga SetMTI(string mti)
+        public Iso8583MessageBuilder SetMTI(string mti)
         {
             if (mti.Length != 4)
                 throw new ArgumentException("MTI must be a 4-digit number.");
@@ -19,7 +19,7 @@ namespace Tamga.Models
             return this;
         }
 
-        public Tamga SetField(int fieldNumber, string value)
+        public Iso8583MessageBuilder SetField(int fieldNumber, string value)
         {
             if (!Iso8583Fields.Fields.ContainsKey(fieldNumber))
                 throw new ArgumentException($"The field {fieldNumber} is not defined!");

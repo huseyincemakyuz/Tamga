@@ -55,12 +55,16 @@
     <Compile Include="Forms\AddFieldDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\ComboBoxItem.cs" />
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\SaveMessageDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\Tabs\BuildTabManager.cs" />
+    <Compile Include="Forms\Tabs\HistoryTabManager.cs" />
+    <Compile Include="Forms\Tabs\ParseTabManager.cs" />
     <Compile Include="Models\FieldDefinition.cs" />
     <Compile Include="Models\Iso8583Fields.cs" />
     <Compile Include="Models\Iso8583MessageBuilder.cs" />
