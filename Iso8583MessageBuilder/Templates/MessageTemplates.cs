@@ -16,6 +16,13 @@ namespace Tamga.Templates
         {
             new MessageTemplate
             {
+                MTI = "0100",
+                Name = "Authorization Request",
+                RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49, 62 },
+                OptionalFields = new List<int> { 14, 25, 37, 42, 48, 55 }
+            },
+            new MessageTemplate
+            {
                 MTI = "0200",
                 Name = "Financial Transaction Request",
                 RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49 },
@@ -41,14 +48,7 @@ namespace Tamga.Templates
                 Name = "Network Management Request",
                 RequiredFields = new List<int> { 7, 11, 70 },
                 OptionalFields = new List<int> { 48 }
-            },
-            new MessageTemplate
-            {
-                MTI = "0100",
-                Name = "Authorization Request",
-                RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49 },
-                OptionalFields = new List<int> { 14, 25, 37, 42, 48, 55 }
-            }
+            }            
         };
     }
 }
