@@ -59,7 +59,7 @@ namespace Tamga.Models
             { 49, new FieldDefinition { FieldNumber = 49, Name = "Currency Code", Type = FieldType.Numeric, LengthType = LengthType.Fixed, MaxLength = 3 } },
             { 50, new FieldDefinition { FieldNumber = 50, Name = "Currency Code Settlement",Type = FieldType.Numeric,LengthType = LengthType.Fixed,MaxLength = 3}},
             { 51, new FieldDefinition { FieldNumber = 51, Name = "Currency Code Cardholder Billing",Type = FieldType.Numeric,LengthType = LengthType.Fixed,MaxLength = 3}},
-            { 52, new FieldDefinition { FieldNumber = 52, Name = "PIN Data", Type = FieldType.Binary, LengthType = LengthType.Fixed, MaxLength = 8 } },
+            { 52, new FieldDefinition { FieldNumber = 52, Name = "PIN Data", Type = FieldType.Binary, LengthType = LengthType.Fixed, MaxLength = 16 } },
             { 53, new FieldDefinition { FieldNumber = 53, Name = "Security Related Control Information",Type = FieldType.Numeric,LengthType = LengthType.Fixed,MaxLength = 16}},
             { 54, new FieldDefinition { FieldNumber = 54, Name = "Additional Amounts",Type = FieldType.AlphaNumeric,LengthType = LengthType.LLLVAR,MaxLength = 120}},
             { 55, new FieldDefinition { FieldNumber = 55, Name = "EMV Data", Type = FieldType.Binary, LengthType = LengthType.LLLVAR, MaxLength = 999 } },  
@@ -78,8 +78,7 @@ namespace Tamga.Models
             { 68, new FieldDefinition { FieldNumber = 68, Name = "Receiving Institution Country Code",Type = FieldType.Numeric,LengthType = LengthType.Fixed,MaxLength = 3}},
             { 69, new FieldDefinition { FieldNumber = 69, Name = "Settlement Institution Country Code",Type = FieldType.Numeric,LengthType = LengthType.Fixed,MaxLength = 3}},
             { 70, new FieldDefinition { FieldNumber = 70, Name = "Network Management Code", Type = FieldType.Numeric, LengthType = LengthType.Fixed, MaxLength = 3 } },
-            { 90, new FieldDefinition { FieldNumber = 90, Name = "Original Data Elements", Type = FieldType.Numeric, LengthType = LengthType.Fixed, MaxLength = 42 } },
-            // F124 - Secondary bitmap için ekstra alan gerekiyor (64'ten büyük)
+            { 90, new FieldDefinition { FieldNumber = 90, Name = "Original Data Elements", Type = FieldType.Numeric, LengthType = LengthType.Fixed, MaxLength = 42 } },           
             { 124, new FieldDefinition { FieldNumber = 124, Name = "Info Text", Type = FieldType.AlphaNumeric, LengthType = LengthType.LLLVAR, MaxLength = 255 } },
         };
     }
