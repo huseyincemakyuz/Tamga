@@ -15,13 +15,12 @@ namespace Tamga.Forms.Tabs
         private TabPage tabPage;
         private TextBox txtHexInput;
         private Button btnParse;
-        private Button btnLoadToBuild;  // ← YENİ
+        private Button btnLoadToBuild;  
         private RichTextBox rtbParseResult;
         private MessageStorageManager storageManager;
 
-        private ParsedMessage lastParsedMessage;  // ← YENİ: Son parse edilen mesajı sakla
-
-        // YENİ EVENT
+        private ParsedMessage lastParsedMessage;  
+       
         public event EventHandler<ParsedMessage> LoadToBuildRequested;
 
         #endregion
@@ -150,10 +149,7 @@ namespace Tamga.Forms.Tabs
             };
             btnSaveParsed.FlatAppearance.BorderSize = 0;
             btnSaveParsed.Click += BtnSaveParsedMessage_Click;
-
-            // ═══════════════════════════════════════════════
-            // YENİ BUTON: LOAD TO BUILD
-            // ═══════════════════════════════════════════════
+          
             btnLoadToBuild = new Button
             {
                 Location = new Point(430, 10),
@@ -169,7 +165,7 @@ namespace Tamga.Forms.Tabs
             btnLoadToBuild.FlatAppearance.BorderSize = 0;
             btnLoadToBuild.Click += BtnLoadToBuild_Click;
 
-            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse, btnSaveParsed, btnLoadToBuild }); // btnLoadToBuild ← YENİ
+            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse, btnSaveParsed, btnLoadToBuild });
             return btnPanel;
         }
 
@@ -196,10 +192,7 @@ namespace Tamga.Forms.Tabs
                 DisplayParsedMessage(parsedMessage);
 
                 lastParsedMessage = parser.Parse(txtHexInput.Text); // YENİ
-
-                // ═══════════════════════════════════════════════
-                // Parse başarılıysa Load to Build butonunu aktif et
-                // ═══════════════════════════════════════════════
+                
                 btnLoadToBuild.Enabled = lastParsedMessage != null &&
                                          lastParsedMessage.Errors.Count == 0;
 
@@ -216,10 +209,7 @@ namespace Tamga.Forms.Tabs
                 AppendColored(ex.StackTrace, Color.Gray, false);
             }
         }
-
-        // ═══════════════════════════════════════════════
-        // YENİ METOT: Load to Build
-        // ═══════════════════════════════════════════════
+       
         private void BtnLoadToBuild_Click(object sender, EventArgs e)
         {
             if (lastParsedMessage == null)

@@ -576,10 +576,7 @@ namespace Tamga.Forms.Tabs
                 }
             }
         }
-
-        // ═══════════════════════════════════════════════
-        // YENİ METOT: ParsedMessage'dan Yükle
-        // ═══════════════════════════════════════════════
+       
         public void LoadFromParsedMessage(ParsedMessage parsedMessage)
         {
             // Find template by MTI

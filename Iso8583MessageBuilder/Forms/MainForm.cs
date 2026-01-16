@@ -82,10 +82,7 @@ namespace Tamga.Forms
 
             // Parse Tab Manager
             parseTabManager = new ParseTabManager(tabParse, storageManager);
-
-            // ═══════════════════════════════════════════════
-            // YENİ EVENT: Parse'dan Build'e yükleme
-            // ═══════════════════════════════════════════════
+           
             parseTabManager.LoadToBuildRequested += ParseTabManager_LoadToBuildRequested;
 
             // History Tab Manager
@@ -186,10 +183,7 @@ namespace Tamga.Forms
             tabControl.SelectedTab = tabParse;
             parseTabManager.LoadMessage(message);
         }
-
-        // ═══════════════════════════════════════════════
-        // YENİ EVENT HANDLER: Parse → Build
-        // ═══════════════════════════════════════════════
+       
         private void ParseTabManager_LoadToBuildRequested(object sender, ParsedMessage parsedMessage)
         {
             // Build tab'a geç
