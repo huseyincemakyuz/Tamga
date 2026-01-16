@@ -15,8 +15,14 @@ namespace Tamga.Forms.Tabs
         private TabPage tabPage;
         private TextBox txtHexInput;
         private Button btnParse;
+        private Button btnLoadToBuild;  // ← YENİ
         private RichTextBox rtbParseResult;
         private MessageStorageManager storageManager;
+
+        private ParsedMessage lastParsedMessage;  // ← YENİ: Son parse edilen mesajı sakla
+
+        // YENİ EVENT
+        public event EventHandler<ParsedMessage> LoadToBuildRequested;
 
         #endregion
 
@@ -145,7 +151,25 @@ namespace Tamga.Forms.Tabs
             btnSaveParsed.FlatAppearance.BorderSize = 0;
             btnSaveParsed.Click += BtnSaveParsedMessage_Click;
 
-            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse, btnSaveParsed });
+            // ═══════════════════════════════════════════════
+            // YENİ BUTON: LOAD TO BUILD
+            // ═══════════════════════════════════════════════
+            btnLoadToBuild = new Button
+            {
+                Location = new Point(430, 10),
+                Text = "📤 Load to Build",
+                Width = 140,
+                Height = 35,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Enabled = false  // Başlangıçta devre dışı
+            };
+            btnLoadToBuild.FlatAppearance.BorderSize = 0;
+            btnLoadToBuild.Click += BtnLoadToBuild_Click;
+
+            btnPanel.Controls.AddRange(new Control[] { btnParse, btnClearParse, btnSaveParsed, btnLoadToBuild }); // btnLoadToBuild ← YENİ
             return btnPanel;
         }
 
@@ -170,6 +194,18 @@ namespace Tamga.Forms.Tabs
                 var parsedMessage = parser.Parse(txtHexInput.Text);
 
                 DisplayParsedMessage(parsedMessage);
+
+                lastParsedMessage = parser.Parse(txtHexInput.Text); // YENİ
+
+                // ═══════════════════════════════════════════════
+                // Parse başarılıysa Load to Build butonunu aktif et
+                // ═══════════════════════════════════════════════
+                btnLoadToBuild.Enabled = lastParsedMessage != null &&
+                                         lastParsedMessage.Errors.Count == 0;
+
+                // Debug için
+                Console.WriteLine($"Parse completed. Errors: {lastParsedMessage.Errors.Count}");
+                Console.WriteLine($"Load to Build button enabled: {btnLoadToBuild.Enabled}");
             }
             catch (Exception ex)
             {
@@ -179,6 +215,34 @@ namespace Tamga.Forms.Tabs
                 AppendColored("Stack Trace:\n", Color.Gray, false);
                 AppendColored(ex.StackTrace, Color.Gray, false);
             }
+        }
+
+        // ═══════════════════════════════════════════════
+        // YENİ METOT: Load to Build
+        // ═══════════════════════════════════════════════
+        private void BtnLoadToBuild_Click(object sender, EventArgs e)
+        {
+            if (lastParsedMessage == null)
+            {
+                MessageBox.Show("Please parse a message first!", "No Message",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (lastParsedMessage.Errors.Count > 0)
+            {
+                var result = MessageBox.Show(
+                    "The parsed message has errors. Do you still want to load it to Build tab?",
+                    "Parsing Errors",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                    return;
+            }
+
+            // Event tetikle - MainForm dinliyor
+            LoadToBuildRequested?.Invoke(this, lastParsedMessage);
         }
 
         private void BtnSaveParsedMessage_Click(object sender, EventArgs e)

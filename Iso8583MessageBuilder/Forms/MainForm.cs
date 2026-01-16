@@ -83,6 +83,11 @@ namespace Tamga.Forms
             // Parse Tab Manager
             parseTabManager = new ParseTabManager(tabParse, storageManager);
 
+            // ═══════════════════════════════════════════════
+            // YENİ EVENT: Parse'dan Build'e yükleme
+            // ═══════════════════════════════════════════════
+            parseTabManager.LoadToBuildRequested += ParseTabManager_LoadToBuildRequested;
+
             // History Tab Manager
             historyTabManager = new HistoryTabManager(tabHistory, storageManager);
             historyTabManager.LoadToBuildRequested += HistoryTabManager_LoadToBuildRequested;
@@ -180,6 +185,26 @@ namespace Tamga.Forms
         {
             tabControl.SelectedTab = tabParse;
             parseTabManager.LoadMessage(message);
+        }
+
+        // ═══════════════════════════════════════════════
+        // YENİ EVENT HANDLER: Parse → Build
+        // ═══════════════════════════════════════════════
+        private void ParseTabManager_LoadToBuildRequested(object sender, ParsedMessage parsedMessage)
+        {
+            // Build tab'a geç
+            tabControl.SelectedTab = tabBuild;
+
+            // Parse edilmiş mesajı Build tab'a yükle
+            buildTabManager.LoadFromParsedMessage(parsedMessage);
+
+            // Bilgi mesajı
+            MessageBox.Show(
+                $"Message '{parsedMessage.MTI}' loaded to Build tab!\n\n" +
+                $"You can now modify the fields and generate a new hex message.",
+                "Loaded Successfully",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         #endregion

@@ -577,6 +577,74 @@ namespace Tamga.Forms.Tabs
             }
         }
 
+        // ═══════════════════════════════════════════════
+        // YENİ METOT: ParsedMessage'dan Yükle
+        // ═══════════════════════════════════════════════
+        public void LoadFromParsedMessage(ParsedMessage parsedMessage)
+        {
+            // Find template by MTI
+            var template = MessageTemplates.Templates.FirstOrDefault(t => t.MTI == parsedMessage.MTI);
+
+            if (template != null)
+            {
+                // Select template
+                for (int i = 0; i < cmbMessageType.Items.Count; i++)
+                {
+                    var item = (ComboBoxItem)cmbMessageType.Items[i];
+                    if (((MessageTemplate)item.Value).MTI == parsedMessage.MTI)
+                    {
+                        cmbMessageType.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Template yoksa ilk template'i seç
+                if (cmbMessageType.Items.Count > 0)
+                    cmbMessageType.SelectedIndex = 0;
+            }
+
+            // Load fields from parsed message
+            if (parsedMessage.Fields != null)
+            {
+                foreach (var field in parsedMessage.Fields)
+                {
+                    var fieldControl = fieldControls.FirstOrDefault(fc => fc.FieldNumber == field.Key);
+
+                    if (fieldControl != null)
+                    {
+                        // Field zaten var, değeri güncelle
+                        fieldControl.SetValue(field.Value);
+                        fieldControl.EnableField(true);  // Aktif et
+                    }
+                    else
+                    {
+                        // Field yok, yeni ekle
+                        if (Iso8583Fields.Fields.ContainsKey(field.Key))
+                        {
+                            var fieldDef = Iso8583Fields.Fields[field.Key];
+                            var newFieldControl = new FieldControl(fieldDef, isRequired: false);
+
+                            int yPos = fieldControls.Count > 0
+                                ? fieldControls.Last().Location.Y + fieldControls.Last().Height + 5
+                                : 10;
+
+                            newFieldControl.Location = new Point(10, yPos);
+                            newFieldControl.SetValue(field.Value);
+                            newFieldControl.EnableField(true);
+
+                            pnlFields.Controls.Add(newFieldControl);
+                            fieldControls.Add(newFieldControl);
+                        }
+                    }
+                }
+            }
+
+            // Scroll to top
+            pnlFields.ScrollControlIntoView(fieldControls.FirstOrDefault());
+        }
+
         #endregion
     }   
 }

@@ -129,5 +129,36 @@ namespace Tamga.Controls
             txtValue.Text = value;
             chkEnabled.Checked = !string.IsNullOrEmpty(value);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // YENİ METOTLAR
+        // ═══════════════════════════════════════════════════════════
+       
+        public void EnableField(bool enable)
+        {
+            // Checkbox'ı işaretle/kaldır
+            chkEnabled.Checked = enable;
+
+            // TextBox'ı enable/disable et
+            txtValue.Enabled = enable;
+
+            // TextBox rengini değiştir (opsiyonel - görsel feedback)
+            txtValue.BackColor = enable
+                ? Color.White
+                : Color.FromArgb(240, 240, 240);
+        }
+        
+        public void Clear()
+        {
+            txtValue.Clear();
+            chkEnabled.Checked = false;
+        }
+        
+        public string GetValue()
+        {
+            return txtValue.Text.Trim();
+        }
+
+
     }
 }
