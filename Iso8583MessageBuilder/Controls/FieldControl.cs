@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Tamga.Common;
 using Tamga.Models;
 
 namespace Tamga.Controls
@@ -13,6 +14,7 @@ namespace Tamga.Controls
         private TextBox txtValue;
         private Button btnAutoGenerate;
         private Label lblFieldInfo;
+        private string lastStan;
 
         public int FieldNumber { get; private set; }
         public FieldDefinition Definition { get; private set; }
@@ -101,6 +103,8 @@ namespace Tamga.Controls
         private void BtnAutoGenerate_Click(object sender, EventArgs e)
         {
             var now = DateTime.Now;
+            MessageBox.Show(IsoRuntimeState.LastStan ?? "STAN NULL");
+
 
             switch (Definition.FieldNumber)
             {
@@ -108,7 +112,10 @@ namespace Tamga.Controls
                     txtValue.Text = now.ToString("MMddHHmmss");
                     break;
                 case 11: // STAN
-                    txtValue.Text = new Random().Next(1, 999999).ToString("D6");
+                    string stan = new Random().Next(1, 999999).ToString("D6");
+
+                    IsoRuntimeState.LastStan = stan;
+                    txtValue.Text = stan;
                     break;
                 case 12: // Local Time hhmmss
                     txtValue.Text = now.ToString("HHmmss");
@@ -117,7 +124,18 @@ namespace Tamga.Controls
                     txtValue.Text = now.ToString("MMdd");
                     break;
                 case 37: // RRN şimdilik böyle kasın düzelteceğim
-                    txtValue.Text = now.ToString("yyMMddHHmmss");
+
+                    if (string.IsNullOrEmpty(IsoRuntimeState.LastStan)) 
+                    {
+                        MessageBox.Show("Please generate STAN first (Field 11).");
+                        return;
+                    }
+
+                    int y = now.Year%10;
+                    int ddd = now.DayOfYear;
+                    int hh = now.Hour;
+
+                    txtValue.Text = $"{y}{ddd:D3}{hh:D2}{IsoRuntimeState.LastStan}";
                     break;
             }
 
