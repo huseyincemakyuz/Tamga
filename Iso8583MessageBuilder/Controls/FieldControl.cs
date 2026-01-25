@@ -102,9 +102,7 @@ namespace Tamga.Controls
 
         private void BtnAutoGenerate_Click(object sender, EventArgs e)
         {
-            var now = DateTime.Now;
-            MessageBox.Show(IsoRuntimeState.LastStan ?? "STAN NULL");
-
+            var now = DateTime.Now;           
 
             switch (Definition.FieldNumber)
             {
@@ -123,23 +121,51 @@ namespace Tamga.Controls
                 case 13: // Local Date MMDD
                     txtValue.Text = now.ToString("MMdd");
                     break;
-                case 37: // RRN şimdilik böyle kasın düzelteceğim
-
-                    if (string.IsNullOrEmpty(IsoRuntimeState.LastStan)) 
-                    {
-                        MessageBox.Show("Please generate STAN first (Field 11).");
-                        return;
-                    }
-
-                    int y = now.Year%10;
-                    int ddd = now.DayOfYear;
-                    int hh = now.Hour;
-
-                    txtValue.Text = $"{y}{ddd:D3}{hh:D2}{IsoRuntimeState.LastStan}";
+                case 37: // RRN                    
+                    GenerateRRN(now);
+                    //int y = now.Year%10;                   
                     break;
             }
 
             chkEnabled.Checked = true;
+        }
+
+        private void GenerateRRN(DateTime now)
+        {
+            FieldControl stanField = null;
+
+            foreach (Control control in this.Parent.Controls)
+            {
+                if(control is FieldControl fc && fc.FieldNumber == 11)
+                {
+                    stanField = fc;
+                    break;
+                }
+            }
+
+
+            if(stanField == null || !stanField.IsFieldEnabled || string.IsNullOrWhiteSpace(stanField.FieldValue))
+            {
+                MessageBox.Show("F11 (STAN) must be filled first!", "F11 Requied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string stan = stanField.FieldValue.Trim();
+
+            if(stan.Length != 6) 
+            {
+                MessageBox.Show($"STAN must be 6 digits! Current: {stan.Length}", "Invalid STAN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            string y = (now.Year%10).ToString();
+            string ddd = now.DayOfYear.ToString("D3");
+            string hh = now.ToString("HH");
+            string rrn = $"{y}{ddd}{hh}{stan}";
+
+            txtValue.Text = rrn;
+            chkEnabled.Checked = true;
+
         }
 
         public void SetValue(string value)
@@ -147,11 +173,7 @@ namespace Tamga.Controls
             txtValue.Text = value;
             chkEnabled.Checked = !string.IsNullOrEmpty(value);
         }
-
-        // ═══════════════════════════════════════════════════════════
-        // YENİ METOTLAR
-        // ═══════════════════════════════════════════════════════════
-       
+              
         public void EnableField(bool enable)
         {
             // Checkbox'ı işaretle/kaldır

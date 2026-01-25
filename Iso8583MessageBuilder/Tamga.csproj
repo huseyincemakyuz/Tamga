@@ -49,7 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\IsoRuntimeState.cs" />
     <Compile Include="Controls\FieldControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
