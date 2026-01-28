@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Tamga.Common;
 using Tamga.Models;
 
 namespace Tamga.Controls
@@ -109,11 +108,8 @@ namespace Tamga.Controls
                 case 7: // Transmission DateTime MMDDhhmmss
                     txtValue.Text = now.ToString("MMddHHmmss");
                     break;
-                case 11: // STAN
-                    string stan = new Random().Next(1, 999999).ToString("D6");
-
-                    IsoRuntimeState.LastStan = stan;
-                    txtValue.Text = stan;
+                case 11: // STAN                                   
+                    txtValue.Text = new Random().Next(1, 999999).ToString("D6");
                     break;
                 case 12: // Local Time hhmmss
                     txtValue.Text = now.ToString("HHmmss");
