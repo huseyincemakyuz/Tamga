@@ -271,7 +271,7 @@ namespace Tamga.Forms.Tabs
                         {
                             Name = dialog.MessageName,
                             MTI = parsedMessage.MTI,
-                            HexMessage = txtHexInput.Text.Replace(Environment.NewLine, "").Replace(" ", ""),
+                            HexMessage = txtHexInput.Text.Replace(System.Environment.NewLine, "").Replace(" ", ""),
                             Fields = parsedMessage.Fields,
                             Tags = dialog.Tags?.ToList() ?? new List<string>(),
                             Notes = dialog.Notes
@@ -373,6 +373,24 @@ namespace Tamga.Forms.Tabs
         {
             txtHexInput.Text = message.HexMessage;
             BtnParse_Click(null, null);
+        }
+
+        /// <summary>
+        /// Input hex mesajı döndür (temizlenmiş)
+        /// </summary>
+        public string GetInputHex()
+        {
+            if (txtHexInput == null)
+                return string.Empty;
+
+            // Boşluk, satır sonu karakterlerini temizle
+            string hex = txtHexInput.Text;
+            hex = hex.Replace(" ", "");
+            hex = hex.Replace("\n", "");
+            hex = hex.Replace("\r", "");
+            hex = hex.Replace("\t", "");
+
+            return hex.Trim();
         }
 
         #endregion

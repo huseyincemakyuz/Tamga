@@ -59,6 +59,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ComboBoxItem.cs" />
+    <Compile Include="Forms\EnvironmentSettingsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,10 +71,15 @@
     <Compile Include="Forms\Tabs\BuildTabManager.cs" />
     <Compile Include="Forms\Tabs\HistoryTabManager.cs" />
     <Compile Include="Forms\Tabs\ParseTabManager.cs" />
+    <Compile Include="Models\ServerEnvironment.cs" />
+    <Compile Include="Models\EnvironmentSettings.cs" />
     <Compile Include="Models\FieldDefinition.cs" />
     <Compile Include="Models\Iso8583Fields.cs" />
     <Compile Include="Models\Iso8583MessageBuilder.cs" />
     <Compile Include="Models\Iso8583MessageParser.cs" />
+    <Compile Include="Models\MessageResponse.cs" />
+    <Compile Include="Models\MessageSender.cs" />
+    <Compile Include="Models\MessageSenderHelper.cs" />
     <Compile Include="Models\MessageStorageManager.cs" />
     <Compile Include="Models\SavedMessage.cs" />
     <Compile Include="Program.cs" />

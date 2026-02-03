@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Tamga.Forms.Dialogs;
 using Tamga.Forms.Tabs;
 using Tamga.Models;
 
@@ -27,6 +28,15 @@ namespace Tamga.Forms
         private ParseTabManager parseTabManager;
         private HistoryTabManager historyTabManager;
 
+        // ═══════════════════════════════════════════════
+        // YENİ: Toolbar
+        // ═══════════════════════════════════════════════
+        private ToolStrip toolStrip;
+        private ToolStripLabel lblEnvironment;
+        private ToolStripComboBox cmbEnvironment;
+        private ToolStripButton btnSettings;
+        private ToolStripButton btnSend;                
+
         #endregion
 
         #region Constructor
@@ -35,7 +45,8 @@ namespace Tamga.Forms
         {
             storageManager = new MessageStorageManager();
             InitializeComponent();
-            InitializeTabManagers();
+            InitializeToolbar();
+            InitializeTabManagers();            
         }
 
         #endregion
@@ -89,6 +100,84 @@ namespace Tamga.Forms
             historyTabManager = new HistoryTabManager(tabHistory, storageManager);
             historyTabManager.LoadToBuildRequested += HistoryTabManager_LoadToBuildRequested;
             historyTabManager.LoadToParseRequested += HistoryTabManager_LoadToParseRequested;
+        }
+
+        // ═══════════════════════════════════════════════
+        // YENİ: TOOLBAR
+        // ═══════════════════════════════════════════════
+        private void InitializeToolbar()
+        {
+            toolStrip = new ToolStrip
+            {
+                GripStyle = ToolStripGripStyle.Hidden,
+                Padding = new Padding(0,0,20,0),
+                Margin = new Padding(0,0,15,0),
+                BackColor = Color.FromArgb(240, 240, 240)
+            };
+           
+            // Environment Label
+            lblEnvironment = new ToolStripLabel("Environment:") 
+            {
+                Alignment = ToolStripItemAlignment.Right
+            };
+
+            // Environment ComboBox
+            cmbEnvironment = new ToolStripComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 800,
+                FlatStyle = FlatStyle.Flat,
+                AutoSize = true,
+                Padding = new Padding(0, 0, 0, 0),
+                Alignment = ToolStripItemAlignment.Right
+                
+            };
+            cmbEnvironment.SelectedIndexChanged += CmbEnvironment_SelectedIndexChanged;
+
+            // Settings Button
+            btnSettings = new ToolStripButton
+            {
+                Text = "⚙️",
+                ToolTipText = "Environment Settings",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Font = new Font("Segoe UI", 12),
+                Alignment = ToolStripItemAlignment.Right
+            };
+            btnSettings.Click += BtnSettings_Click;
+
+            // Separator
+            var separator = new ToolStripSeparator() 
+            {
+                Alignment = ToolStripItemAlignment.Right
+            };
+
+            // Send Button
+            btnSend = new ToolStripButton
+            {
+                Text = "📤 Send",
+                ToolTipText = "Send Message (Ctrl+Enter)",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(34, 139, 34),
+                Padding = new Padding(10, 5, 10, 5),
+                 Alignment = ToolStripItemAlignment.Right
+            };
+            btnSend.Click += BtnSend_Click;
+
+            toolStrip.Items.AddRange(new ToolStripItem[]
+            {
+                btnSend,
+                separator,
+                btnSettings,
+                cmbEnvironment,
+                lblEnvironment,                                             
+            });
+
+            this.Controls.Add(toolStrip);
+
+            // Load environments
+            LoadEnvironments();
         }
 
         private void InitializeStatusBar()
@@ -162,6 +251,162 @@ namespace Tamga.Forms
         #endregion
 
         #region Event Handlers
+
+        ///////////yeni kodlar///////
+        private void LoadEnvironments()
+        {
+            cmbEnvironment.Items.Clear();
+
+            var environments = EnvironmentSettings.Instance.GetEnabled();
+            foreach (var env in environments)
+            {
+                cmbEnvironment.Items.Add(env);
+            }
+
+            // Default'u seç
+            var defaultEnv = EnvironmentSettings.Instance.GetDefault();
+            if (defaultEnv != null)
+            {
+                cmbEnvironment.SelectedItem = defaultEnv;
+            }
+            else if (cmbEnvironment.Items.Count > 0)
+            {
+                cmbEnvironment.SelectedIndex = 0;
+            }
+        }
+
+        private void CmbEnvironment_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedEnv = cmbEnvironment.SelectedItem as ServerEnvironment;
+            if (selectedEnv != null)
+            {
+                lblStatus.Text = $"Environment: {selectedEnv.DisplayText}";
+            }
+        }
+
+        private void BtnSettings_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new EnvironmentSettingsDialog())
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    LoadEnvironments();
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        // SEND BUTONU EVENT
+        // ═══════════════════════════════════════════════
+        private async void BtnSend_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 1. Aktif tab'dan hex al
+                string hexMessage = GetCurrentHexMessage();
+
+                // 2. Hex var mı?
+                if (string.IsNullOrWhiteSpace(hexMessage))
+                {
+                    MessageBox.Show(
+                        GetNoMessageWarning(),
+                        "No Message",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 3. Environment var mı?
+                var selectedEnv = cmbEnvironment.SelectedItem as Models.ServerEnvironment;
+                if (selectedEnv == null)
+                {
+                    MessageBox.Show(
+                        "Please select an environment first!",
+                        "No Environment",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 4. Gönder!
+                lblStatus.Text = $"Sending message to {selectedEnv.Name}...";
+
+                await MessageSenderHelper.SendMessageAsync(
+                    hexMessage,
+                    selectedEnv,
+                    this);
+
+                lblStatus.Text = $"Message sent to {selectedEnv.Name}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblStatus.Text = "Error sending message";
+            }
+        }
+
+        /// <summary>
+        /// Aktif tab'dan hex mesajı al
+        /// </summary>
+        private string GetCurrentHexMessage()
+        {
+            if (tabControl.SelectedTab == tabBuild)
+            {
+                return buildTabManager.GetGeneratedHex();
+            }
+            else if (tabControl.SelectedTab == tabParse)
+            {
+                return parseTabManager.GetInputHex();
+            }
+            else if (tabControl.SelectedTab == tabHistory)
+            {
+                return historyTabManager.GetSelectedMessageHex();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Tab'a göre uyarı mesajı
+        /// </summary>
+        private string GetNoMessageWarning()
+        {
+            if (tabControl.SelectedTab == tabBuild)
+            {
+                return "No message to send!\n\n" +
+                       "Please generate a message first.";
+            }
+            else if (tabControl.SelectedTab == tabParse)
+            {
+                return "No message to send!\n\n" +
+                       "Please parse a message first.";
+            }
+            else if (tabControl.SelectedTab == tabHistory)
+            {
+                return "No message selected!\n\n" +
+                       "Please select a message from history.";
+            }
+
+            return "No message to send!";
+        }
+
+        // ═══════════════════════════════════════════════
+        // KLAVYE KISAYOLU (Ctrl+Enter)
+        // ═══════════════════════════════════════════════
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.Enter))
+            {
+                BtnSend_Click(null, null);
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+
+        ///////////yeni kodlar///////
 
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {

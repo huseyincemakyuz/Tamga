@@ -542,6 +542,30 @@ namespace Tamga.Forms.Tabs
             return currentMessages.FirstOrDefault(m => m.Id == messageId);
         }
 
+        /// <summary>
+        /// Seçili mesajın hex'ini döndür
+        /// </summary>
+        public string GetSelectedMessageHex()
+        {
+            if (dgvMessages == null || dgvMessages.SelectedRows.Count == 0)
+                return string.Empty;
+
+            var message = dgvMessages.SelectedRows[0].DataBoundItem as SavedMessage;
+            return message?.HexMessage ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Seçili mesajın ismini döndür
+        /// </summary>
+        public string GetSelectedMessageName()
+        {
+            if (dgvMessages == null || dgvMessages.SelectedRows.Count == 0)
+                return "Unknown";
+
+            var message = dgvMessages.SelectedRows[0].DataBoundItem as SavedMessage;
+            return message?.Name ?? "Unknown";
+        }
+
         #endregion
     }
 }

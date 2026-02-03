@@ -215,7 +215,7 @@ namespace Tamga.Forms.Tabs
             {
                 if (!string.IsNullOrEmpty(txtHexOutput.Text))
                 {
-                    Clipboard.SetText(txtHexOutput.Text.Replace(Environment.NewLine, ""));
+                    Clipboard.SetText(txtHexOutput.Text.Replace(System.Environment.NewLine, ""));
                     MessageBox.Show("Hex copied to clipboard!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             };
@@ -444,7 +444,7 @@ namespace Tamga.Forms.Tabs
                         {
                             Name = dialog.MessageName,
                             MTI = template.MTI,
-                            HexMessage = txtHexOutput.Text.Replace(Environment.NewLine, "").Replace(" ", ""),
+                            HexMessage = txtHexOutput.Text.Replace(System.Environment.NewLine, "").Replace(" ", ""),
                             Fields = fields,
                             Tags = dialog.Tags?.ToList() ?? new List<string>(),
                             Notes = dialog.Notes
@@ -640,6 +640,17 @@ namespace Tamga.Forms.Tabs
 
             // Scroll to top
             pnlFields.ScrollControlIntoView(fieldControls.FirstOrDefault());
+        }
+
+        /// <summary>
+        /// Generate edilmiş hex mesajı döndür
+        /// </summary>
+        public string GetGeneratedHex()
+        {
+            if (txtHexOutput == null)
+                return string.Empty;
+
+            return txtHexOutput.Text.Trim();
         }
 
         #endregion
