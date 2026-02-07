@@ -11,6 +11,8 @@ namespace Tamga.Models
     /// </summary>
     public class EnvironmentSettings
     {
+        #region Fields
+
         private const string SettingsFile = "environments.json";
         private static EnvironmentSettings _instance;
 
@@ -28,11 +30,17 @@ namespace Tamga.Models
             }
         }
 
+        #endregion
+
+        #region Constructor
         private EnvironmentSettings()
         {
             Environments = new List<ServerEnvironment>();
             InitializeDefaults();
         }
+        #endregion
+
+        #region UI Initialization
 
         /// <summary>
         /// Varsayılan ortamları oluştur
@@ -61,6 +69,8 @@ namespace Tamga.Models
                 Description = "Local debug server"
             });
         }
+
+        #endregion
 
         /// <summary>
         /// Ayarları dosyadan yükle

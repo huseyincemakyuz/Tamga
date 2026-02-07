@@ -10,19 +10,24 @@ namespace Tamga.Forms.Dialogs
     /// </summary>
     public class EnvironmentSettingsDialog : Form
     {
+        #region Fields
         private DataGridView dgvEnvironments;
         private Button btnSave;
         private Button btnCancel;
         private Button btnAdd;
         private Button btnDelete;
         private Button btnSetDefault;
+        #endregion
 
+        #region Constructor
         public EnvironmentSettingsDialog()
         {
             InitializeComponent();
             LoadEnvironments();
         }
+        #endregion
 
+        #region UI Initialization
         private void InitializeComponent()
         {
             this.Text = "Environment Settings";
@@ -186,7 +191,7 @@ namespace Tamga.Forms.Dialogs
             this.AcceptButton = btnSave;
             this.CancelButton = btnCancel;
         }
-
+        #endregion
         private void LoadEnvironments()
         {
             dgvEnvironments.DataSource = null;
