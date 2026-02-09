@@ -394,7 +394,7 @@ namespace Tamga.Forms
         // ═══════════════════════════════════════════════
         // KLAVYE KISAYOLU (Ctrl+Enter)
         // ═══════════════════════════════════════════════
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) // incele!!!!!!
         {
             if (keyData == (Keys.Control | Keys.Enter))
             {

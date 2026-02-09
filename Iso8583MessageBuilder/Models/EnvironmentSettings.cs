@@ -13,7 +13,12 @@ namespace Tamga.Models
     {
         #region Fields
 
-        private const string SettingsFile = "environments.json";
+        //private const string SettingsFile = "environments.json";        
+        private static readonly string SettingsFile = Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
+            "Tamga",
+            "environments.json");
+
         private static EnvironmentSettings _instance;
 
         public List<ServerEnvironment> Environments { get; set; }
@@ -79,6 +84,13 @@ namespace Tamga.Models
         {
             try
             {
+                string folder = Path.GetDirectoryName(SettingsFile);
+
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
                 if (File.Exists(SettingsFile))
                 {
                     var json = File.ReadAllText(SettingsFile);
@@ -105,6 +117,13 @@ namespace Tamga.Models
         {
             try
             {
+                string folder = Path.GetDirectoryName(SettingsFile);
+
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
                 var json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 File.WriteAllText(SettingsFile, json);
             }

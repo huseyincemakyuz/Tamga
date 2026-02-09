@@ -196,9 +196,7 @@ namespace Tamga.Forms.Tabs
                 btnLoadToBuild.Enabled = lastParsedMessage != null &&
                                          lastParsedMessage.Errors.Count == 0;
 
-                // Debug için
-                Console.WriteLine($"Parse completed. Errors: {lastParsedMessage.Errors.Count}");
-                Console.WriteLine($"Load to Build button enabled: {btnLoadToBuild.Enabled}");
+                
             }
             catch (Exception ex)
             {
