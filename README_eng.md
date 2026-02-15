@@ -7,7 +7,7 @@
 
 A Windows desktop application for building, parsing, and managing ISO 8583 financial messages.
 
-[🇹🇷 Türkçe README için tıklayın]([README.tr.md](https://github.com/huseyincemakyuz/Tamga/blob/master/README_tr.md))
+[🇹🇷 Türkçe README için tıklayın](https://github.com/huseyincemakyuz/Tamga/blob/master/README_tr.md)
 
 ---
 
