@@ -105,8 +105,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="README_eng.md" />
-    <None Include="README_tr.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
