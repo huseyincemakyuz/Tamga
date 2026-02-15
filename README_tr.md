@@ -7,7 +7,7 @@
 
 ISO 8583 finansal mesajlarını oluşturmak, parse etmek ve yönetmek için Windows masaüstü uygulaması.
 
-[🇬🇧 Click here for English README](README.md)
+[🇬🇧 Click here for English README]([README.md](https://github.com/huseyincemakyuz/Tamga/blob/master/README_eng.md))
 
 ---
 
