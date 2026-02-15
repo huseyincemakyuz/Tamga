@@ -149,6 +149,33 @@ F037 - Retrieval Reference Number (RRN)
 ```
 
 ---
+### TCP/IP Message Sending
+
+#### Configuring Environments
+
+1. Click the **⚙️ Settings** button in the toolbar
+2. Add a new environment with **➕ Add New**
+3. Enter environment details:
+   - **Name**: Environment name (e.g., Test, Production)
+   - **Host**: Gateway IP address or hostname
+   - **Port**: Gateway port number
+   - **Timeout**: Response wait time (in seconds)
+   - **Description**: Environment description (optional)
+4. Select the default environment with the **Default** checkbox
+5. Save with **💾 Save**
+
+#### Sending Messages
+
+1. Select the target environment from the **Environment** dropdown in the toolbar
+2. Prepare your message in any tab:
+   - **Build**: Create a new message
+   - **Parse**: Use existing hex message
+   - **History**: Select a saved message
+3. Click the **📤 Send** button (or use `Ctrl+Enter` shortcut)
+4. The sent message and received response are displayed automatically
+5. If successful, the response is automatically parsed
+
+**Note:** TCP/IP integration may require customization in the `MessageSender.cs` file's TODO sections, as each gateway may have its own message format.
 
 ### Managing History
 
