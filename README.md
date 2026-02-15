@@ -149,6 +149,35 @@ F037 - Retrieval Reference Number (RRN)
 ```
 
 ---
+### TCP/IP ile Mesaj Gönderme
+
+#### Ortam Ayarlarını Yapılandırma
+
+1. Toolbar'daki **⚙️ Ayarlar** butonuna tıklayın
+2. **➕ Add New** ile yeni ortam ekleyin
+3. Ortam bilgilerini girin:
+   - **Name**: Ortam adı (örn: Test, Production)
+   - **Host**: Gateway IP adresi veya hostname
+   - **Port**: Gateway port numarası
+   - **Timeout**: Yanıt bekleme süresi (saniye cinsinden)
+   - **Description**: Ortam açıklaması (opsiyonel)
+4. **Default** checkbox'ı ile varsayılan ortamı seçin
+5. **💾 Save** ile kaydedin
+
+#### Mesaj Gönderme
+
+1. Toolbar'daki **Environment** dropdown'dan hedef ortamı seçin
+2. İstediğiniz sekmede mesajınızı hazırlayın:
+   - **Build**: Yeni mesaj oluştur
+   - **Parse**: Mevcut hex mesajı kullan
+   - **History**: Kaydedilmiş mesajı seç
+3. **📤 Send** butonuna tıklayın (veya `Ctrl+Enter` kısayolu)
+4. Gönderilen mesaj ve alınan yanıt otomatik gösterilir
+5. Yanıt başarılı ise otomatik parse edilir
+
+**Not:** TCP/IP entegrasyonu, her gateway'in kendine özgü mesaj formatı olabileceğinden, kodda `MessageSender.cs` dosyasındaki TODO bölümlerini kendi gateway formatınıza göre düzenlemeniz gerekebilir.
+
+---
 
 ### Geçmiş Yönetimi
 
