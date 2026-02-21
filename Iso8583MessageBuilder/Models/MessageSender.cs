@@ -14,6 +14,7 @@ namespace Tamga.Models
         /// <summary>
         /// Mesaj gönder ve yanıt al
         /// </summary>
+        ///         
         public async Task<MessageResponse> SendMessageAsync(string hexMessage, ServerEnvironment environment)
         {
             var response = new MessageResponse();
@@ -21,15 +22,12 @@ namespace Tamga.Models
 
             try
             {
-                // ═══════════════════════════════════════════════
-                // HEX STRING HAZIRLA
-                // ═══════════════════════════════════════════════
-                hexMessage = CleanHexString(hexMessage);
+                // 1. Hex'i tenizle
+                hexMessage = System.Text.RegularExpressions.Regex.Replace(hexMessage, @"[^0-9A-Fa-f]", "");
 
-                // ═══════════════════════════════════════════════
-                // HEX STRING → BINARY BYTE ARRAY
-                // ═══════════════════════════════════════════════
+                // 2. Binary'e cevir
                 byte[] binaryMessage = HexStringToByteArray(hexMessage);
+                //int iLen = binaryMessage.Length; 
 
                 // ═══════════════════════════════════════════════
                 // TCP BAĞLANTISI
@@ -44,7 +42,7 @@ namespace Tamga.Models
                     using (var stream = client.GetStream())
                     {
                         // ═══════════════════════════════════════════════
-                        // BURAYA C++ KODUNA GÖRE SEND YAZACAĞIZ
+                        // BURAYA KENDI SISTEMINIZIN MESAJ GONDERME SEKLINE GÖRE SEND YAZABILIRSINIZ
                         // ═══════════════════════════════════════════════
                         // TODO: C++ gateway formatına göre gönderim yapılacak
                         //
@@ -106,13 +104,13 @@ namespace Tamga.Models
         }
 
         /// <summary>
-        /// Yanıt al (Gateway'den gelen response)
-        /// TODO: C++ koduna göre düzenlenecek
+        /// Yanıt al
+        /// Response Metodu
         /// </summary>
         private async Task<byte[]> ReceiveResponse(NetworkStream stream)
         {
             // ═══════════════════════════════════════════════
-            // BURAYA C++ KODUNA GÖRE RECEIVE YAZACAĞIZ
+            // BURAYA KENDI SISTEMINIZIN DONECEGI RESPONSE MESAJINA GORE YAZABILIRSINIZ.
             // ═══════════════════════════════════════════════
             // TODO: Gateway'in response formatına göre okuma yapılacak
             //
@@ -179,12 +177,7 @@ namespace Tamga.Models
         /// </summary>
         private string ByteArrayToHexString(byte[] bytes)
         {
-            StringBuilder sb = new StringBuilder(bytes.Length * 2);
-            foreach (byte b in bytes)
-            {
-                sb.AppendFormat("{0:X2}", b);
-            }
-            return sb.ToString();
+            return BitConverter.ToString(bytes).Replace("-", "");
         }
     }
 }

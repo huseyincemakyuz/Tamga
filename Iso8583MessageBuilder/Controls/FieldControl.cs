@@ -12,8 +12,7 @@ namespace Tamga.Controls
         private Label lblFieldName;
         private TextBox txtValue;
         private Button btnAutoGenerate;
-        private Label lblFieldInfo;
-        private string lastStan;
+        private Label lblFieldInfo;        
 
         public int FieldNumber { get; private set; }
         public FieldDefinition Definition { get; private set; }

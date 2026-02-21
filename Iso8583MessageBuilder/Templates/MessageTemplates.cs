@@ -23,6 +23,13 @@ namespace Tamga.Templates
             },
             new MessageTemplate
             {
+                MTI = "0120",
+                Name = "Advice Request",
+                RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 23, 26, 32, 41, 49 },
+                OptionalFields = new List<int> { 14, 25, 37, 42, 48, 55, 57, 62, 63 }
+            },
+            new MessageTemplate
+            {
                 MTI = "0200",
                 Name = "Financial Transaction Request",
                 RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49 },

@@ -18,10 +18,7 @@ namespace Tamga.Models
             Form loadingForm = null;
 
             try
-            {
-                // ═══════════════════════════════════════════════
-                // LOADING DIALOG GÖSTER
-                // ═══════════════════════════════════════════════
+            {                
                 loadingForm = new Form
                 {
                     Text = "Sending Message...",
@@ -45,19 +42,13 @@ namespace Tamga.Models
                 loadingForm.Controls.Add(label);
                 loadingForm.Show(parentForm);
                 Application.DoEvents();
-
-                // ═══════════════════════════════════════════════
-                // MESAJ GÖNDER
-                // ═══════════════════════════════════════════════
+                
                 var sender = new MessageSender();
                 var response = await sender.SendMessageAsync(hexMessage, environment);
 
                 loadingForm.Close();
                 loadingForm = null;
-
-                // ═══════════════════════════════════════════════
-                // SONUCU GÖSTER
-                // ═══════════════════════════════════════════════
+                
                 ShowResponseDialog(response, environment, parentForm);
             }
             catch (Exception ex)
