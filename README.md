@@ -33,7 +33,7 @@ ISO 8583, ATM, POS ve kart ödeme sistemlerinde kullanılan finansal işlem kart
 
 **Alan Ekleme:**
 
-![Alan Ekleme Dialog](screenshots/Screenshot_2026-02-16_002700.png)
+![Alan Ekleme Dialog](screenshots/AlanEkleme.png)
 
 ### 🔍 Parse (Çözümle) Sekmesi
 - **Hex mesajları** okunabilir formata dönüştürme

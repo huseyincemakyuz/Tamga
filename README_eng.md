@@ -33,7 +33,7 @@ ISO 8583 is an international standard for financial transaction card messages us
 
 **Add Field Dialog:**
 
-![Add Field Dialog](screenshots/Screenshot_2026-02-16_002700.png)
+![Add Field Dialog](screenshots/AlanEkleme.png)
 
 ### 🔍 Parse Tab
 - **Convert hex messages** to readable format
