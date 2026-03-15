@@ -9,6 +9,8 @@ ISO 8583 finansal mesajlarını oluşturmak, parse etmek ve yönetmek için Wind
 
 [🇬🇧 Click here for English README](https://github.com/huseyincemakyuz/Tamga/blob/master/README_eng.md)
 
+![Ana Ekran](screenshots/Main_menu_1.png)
+
 ---
 
 ## 🎯 ISO 8583 Nedir?
@@ -27,6 +29,12 @@ ISO 8583, ATM, POS ve kart ödeme sistemlerinde kullanılan finansal işlem kart
 - Daha iyi okunabilirlik için **renkli görünüm**
 - Etiket ve notlarla **mesaj kaydetme**
 
+![Build Sekmesi](screenshots/mainmenu_buildmessagetab_2.png)
+
+**Alan Ekleme:**
+
+![Alan Ekleme Dialog](screenshots/Screenshot_2026-02-16_002700.png)
+
 ### 🔍 Parse (Çözümle) Sekmesi
 - **Hex mesajları** okunabilir formata dönüştürme
 - Tip bilgisi ile **alan bazında detay**
@@ -34,12 +42,28 @@ ISO 8583, ATM, POS ve kart ödeme sistemlerinde kullanılan finansal işlem kart
 - **Build'e Yükle** - parse edilmiş mesajları düzenleme
 - **Parse edilmiş mesajları** geçmişe kaydetme
 
+![Parse Sekmesi](screenshots/parsetab_3.png)
+
 ### 📚 History (Geçmiş) Sekmesi
 - Sıralanabilir tabloda **tüm kaydedilmiş mesajları görüntüleme**
 - İsim, MTI veya etiketlere göre **arama ve filtreleme**
 - Yeniden kullanım için **Build/Parse sekmelerine yükleme**
 - İstenmeyen mesajları **silme**
 - **Hex değerlerini** panoya kopyalama
+
+![History Sekmesi - Tek Mesaj](screenshots/historytab_4.png)
+
+![History Sekmesi - Çoklu Mesaj](screenshots/historytab_5.png)
+
+### 🌐 TCP/IP Entegrasyonu ⭐ YENİ!
+- **Çoklu ortam yönetimi** - Test, Debug, Production ortamları
+- **Gateway'lere mesaj gönderme** - Gerçek zamanlı test
+- **Otomatik yanıt alma ve parse etme**
+- **Ortam bazlı ayarlar** - Host, Port, Timeout
+- **Kolay geçiş** - Dropdown ile ortam değiştirme
+- **Klavye kısayolu** - `Ctrl+Enter` ile hızlı gönderim
+
+![Environment Settings](screenshots/environmentsettings.png)
 
 ### 🎯 Gelişmiş Özellikler
 - **Parse → Build iş akışı** - Bir mesajı parse edin ve düzenleyin
@@ -149,7 +173,8 @@ F037 - Retrieval Reference Number (RRN)
 ```
 
 ---
-### TCP/IP ile Mesaj Gönderme
+
+### TCP/IP ile Mesaj Gönderme ⭐ YENİ!
 
 #### Ortam Ayarlarını Yapılandırma
 
@@ -163,6 +188,8 @@ F037 - Retrieval Reference Number (RRN)
    - **Description**: Ortam açıklaması (opsiyonel)
 4. **Default** checkbox'ı ile varsayılan ortamı seçin
 5. **💾 Save** ile kaydedin
+
+![Ortam Ayarları Dialog](screenshots/environmentsettings.png)
 
 #### Mesaj Gönderme
 
@@ -190,6 +217,50 @@ F037 - Retrieval Reference Number (RRN)
    - **Load to Parse**: Mesajı Parse sekmesinde aç
    - **Delete**: Mesajı geçmişten kaldır
    - **Copy Hex**: Hex değerini panoya kopyala
+
+---
+
+## ⚙️ Yapılandırma Dosyaları
+
+### Ortam Ayarları
+Ortam ayarları otomatik olarak şu konumda saklanır:
+```
+C:\Users\{KullanıcıAdı}\AppData\Roaming\Tamga\environments.json
+```
+
+**Örnek `environments.json`:**
+```json
+{
+  "Environments": [
+    {
+      "Id": "1",
+      "Name": "Test",
+      "Host": "192.168.1.100",
+      "Port": 5000,
+      "TimeoutSeconds": 30,
+      "IsDefault": true,
+      "IsEnabled": true,
+      "Description": "Test ortamı"
+    },
+    {
+      "Id": "2",
+      "Name": "Production",
+      "Host": "10.0.0.50",
+      "Port": 6000,
+      "TimeoutSeconds": 60,
+      "IsDefault": false,
+      "IsEnabled": true,
+      "Description": "Canlı ortam"
+    }
+  ]
+}
+```
+
+### Mesaj Geçmişi
+Kaydedilen mesajlar şu konumda saklanır:
+```
+C:\Users\{KullanıcıAdı}\AppData\Roaming\Tamga\messages.json
+```
 
 ---
 
@@ -231,16 +302,19 @@ F037 - Retrieval Reference Number (RRN)
 - **Framework**: .NET Framework 4.7.2
 - **Arayüz**: Windows Forms
 - **Depolama**: JSON (Newtonsoft.Json 13.0.4)
+- **Network**: System.Net.Sockets (TCP/IP)
 - **Mimari**: Olay Güdümlü, Tab Manager Deseni
 
 ### Proje Yapısı
 ```
 Tamga/
 ├── Forms/
-│   ├── MainForm.cs                  # Ana pencere (TabControl host)
+│   ├── MainForm.cs                  # Ana pencere (TabControl + Toolbar)
 │   ├── ComboBoxItem.cs              # Yardımcı sınıf
 │   ├── AddFieldDialog.cs            # Alan seçim diyalogu
 │   ├── SaveMessageDialog.cs         # Etiket/not ile kaydetme
+│   ├── Dialogs/
+│   │   └── EnvironmentSettingsDialog.cs  # Ortam yönetimi
 │   └── Tabs/
 │       ├── BuildTabManager.cs       # Mesaj oluşturma mantığı
 │       ├── ParseTabManager.cs       # Mesaj parse etme mantığı
@@ -249,6 +323,11 @@ Tamga/
 │   ├── Iso8583MessageBuilder.cs     # Çekirdek mesaj oluşturucu
 │   ├── Iso8583MessageParser.cs      # Çekirdek mesaj parser
 │   ├── MessageStorageManager.cs     # JSON kalıcılığı
+│   ├── MessageSender.cs             # TCP/IP gönderici
+│   ├── MessageSenderHelper.cs       # UI entegrasyonu
+│   ├── ServerEnvironment.cs         # Ortam modeli
+│   ├── EnvironmentSettings.cs       # Ortam ayarları yönetimi
+│   ├── MessageResponse.cs           # Yanıt modeli
 │   ├── FieldDefinition.cs           # Alan metaverileri
 │   ├── ParsedMessage.cs             # Parser sonuçları
 │   ├── SavedMessage.cs              # Depolama modeli
@@ -265,9 +344,58 @@ Tamga/
 - **Olay Güdümlü Mimari**: Bileşenler arası gevşek bağlantı
 - **Repository Deseni**: MessageStorageManager veri erişimini soyutlar
 - **Builder Deseni**: Adım adım mesaj oluşturma
+- **Singleton Deseni**: EnvironmentSettings global ayar yönetimi
 
 ---
+
+## 🔧 Geliştirici Notları
+
+### TCP/IP Entegrasyonu Özelleştirme
+
+`MessageSender.cs` dosyasında, gateway'inizin beklediği formata göre mesaj gönderme ve alma kodlarını özelleştirebilirsiniz:
+```csharp
+// TODO bölümlerini kendi formatınıza göre düzenleyin:
+
+// Örnek Format 1: ASCII Length + Binary Message
+string length = binaryMessage.Length.ToString();
+await stream.WriteAsync(Encoding.ASCII.GetBytes(length));
+await stream.WriteAsync(binaryMessage);
+
+// Örnek Format 2: Binary Length (2-byte) + Binary Message
+byte[] lengthBytes = BitConverter.GetBytes((short)binaryMessage.Length);
+if (BitConverter.IsLittleEndian) Array.Reverse(lengthBytes);
+await stream.WriteAsync(lengthBytes);
+await stream.WriteAsync(binaryMessage);
+```
+
+Yaygın gateway formatları:
+- **ASCII Length + Binary Message**: `"19"` + `[0x30, 0x32, ...]`
+- **Binary 2-byte Length**: `[0x00, 0x13]` + `[0x30, 0x32, ...]`
+- **Binary 4-byte Length**: `[0x00, 0x00, 0x00, 0x13]` + `[0x30, ...]`
+
+---
+
+## ⌨️ Klavye Kısayolları
+
+| Kısayol | Açıklama |
+|---------|----------|
+| `Ctrl+Enter` | Seçili ortama mesaj gönder |
+| `Ctrl+S` | Mesajı kaydet |
+| `Ctrl+P` | Mesajı parse et |
+| `Ctrl+N` | Yeni mesaj |
+
+---
+
+## 🤝 Katkıda Bulunma
+
+1. Projeyi fork edin
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
+4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
+5. Pull Request açın
+
+---
+
 ## 📄 Lisans
 
 Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
-
