@@ -7,45 +7,69 @@
 
 A Windows desktop application for building, parsing, and managing ISO 8583 financial messages.
 
-[🇹🇷 Türkçe README için tıklayın](https://github.com/huseyincemakyuz/Tamga/blob/master/README.md)
+[🇹🇷 Türkçe README için tıklayın](https://github.com/huseyincemakyuz/Tamga/blob/master/README_TR.md)
+
+![Main Screen](screenshots/Main_menu_1.png)
 
 ---
 
 ## 🎯 What is ISO 8583?
 
-ISO 8583 is the international standard for financial transaction card messages used in ATM, POS, and card payment systems. TAMGA helps you create and analyze these messages easily without manual hex calculations.
+ISO 8583 is an international standard for financial transaction card messages used in ATM, POS, and card payment systems. TAMGA helps you easily create and analyze these messages without manual hex calculations.
 
 ---
 
 ## ✨ Features
 
 ### 🔨 Build Tab
-- **Create messages** from predefined templates (0200, 0400, 0800, etc.)
-- **Add/remove fields** dynamically
+- **Build messages** from predefined templates (0200, 0400, 0800, etc.)
+- **Dynamic field addition/removal**
 - **Auto-generate values** for common fields (Date, Time, STAN, RRN)
 - **Real-time hex output** with live preview
 - **Color-coded display** for better readability
-- **Save messages** with tags and notes
+- **Save messages** with labels and notes
+
+![Build Tab](screenshots/mainmenu_buildmessagetab_2.png)
+
+**Add Field Dialog:**
+
+![Add Field Dialog](screenshots/Screenshot_2026-02-16_002700.png)
 
 ### 🔍 Parse Tab
-- **Parse hex messages** into readable format
-- **Field-by-field breakdown** with type information
+- **Convert hex messages** to readable format
+- **Field-by-field details** with type information
 - **Error detection** and validation warnings
 - **Load to Build** - edit parsed messages
 - **Save parsed messages** to history
 
+![Parse Tab](screenshots/parsetab_3.png)
+
 ### 📚 History Tab
 - **View all saved messages** in a sortable table
 - **Search and filter** by name, MTI, or tags
-- **Load to Build/Parse** tabs for reuse
+- **Load to Build/Parse tabs** for reuse
 - **Delete** unwanted messages
 - **Copy hex values** to clipboard
 
+![History Tab - Single Message](screenshots/historytab_4.png)
+
+![History Tab - Multiple Messages](screenshots/historytab_5.png)
+
+### 🌐 TCP/IP Integration ⭐ NEW!
+- **Multi-environment management** - Test, Debug, Production environments
+- **Send messages to gateways** - Real-time testing
+- **Automatic response receiving and parsing**
+- **Environment-based settings** - Host, Port, Timeout
+- **Easy switching** - Change environment via dropdown
+- **Keyboard shortcut** - Quick send with `Ctrl+Enter`
+
+![Environment Settings](screenshots/environmentsettings.png)
+
 ### 🎯 Advanced Features
 - **Parse → Build workflow** - Parse a message and edit it
-- **Auto-generate RRN** based on STAN (F11 → F37 dependency)
+- **Auto RRN generation** based on STAN (F11 → F37 dependency)
 - **Template system** for quick message creation
-- **JSON storage** - portable and human-readable
+- **JSON storage** - portable and readable
 - **No installation required** - portable executable
 
 ---
@@ -53,28 +77,28 @@ ISO 8583 is the international standard for financial transaction card messages u
 ## 🚀 Quick Start
 
 ### Download & Run
-1. Download the latest release from [Releases](../../releases)
+1. Download the latest version from [Releases](../../releases) page
 2. Extract the ZIP file
 3. Run `Tamga.exe`
 4. No installation required!
 
 ### System Requirements
-- **OS**: Windows 7 or later
+- **Operating System**: Windows 7 or higher
 - **Framework**: .NET Framework 4.7.2 (usually pre-installed)
 - **Disk Space**: ~5 MB
 
 ---
 
-## 📖 Usage Guide
+## 📖 User Guide
 
-### Creating a Message
+### Building Messages
 
-1. Open **Build** tab
+1. Open the **Build** tab
 2. Select message type from dropdown (e.g., "0200 - Authorization Request")
 3. Required fields (marked with `*`) are automatically added
 4. Fill in the required fields
 5. Click **Add Field** to add optional fields
-6. Use **Auto** buttons for automatic value generation:
+6. Use **Auto** buttons to generate values:
    - **F7**: Transmission Date/Time (MMDDhhmmss)
    - **F11**: STAN - 6-digit random number
    - **F12**: Local Time (hhmmss)
@@ -98,15 +122,15 @@ Generated Hex:
 
 ---
 
-### Parsing a Message
+### Parsing Messages
 
-1. Open **Parse** tab
+1. Open the **Parse** tab
 2. Paste hex message into the input box
 3. Click **Parse & Decode Message**
-4. View the decoded fields with:
+4. View parsed fields:
    - MTI (Message Type Indicator)
    - Primary/Secondary bitmaps
-   - Field-by-field breakdown
+   - Field-by-field details
 5. **(Optional)** Click **Load to Build** to edit the parsed message
 6. **(Optional)** Click **Save** to store in history
 
@@ -145,11 +169,12 @@ F037 - Retrieval Reference Number (RRN)
      Type: an 12, Fixed
      Value: 5023171234
 
-✓ The message has been successfully parsed!
+✓ Message parsed successfully!
 ```
 
 ---
-### TCP/IP Message Sending
+
+### TCP/IP Message Sending ⭐ NEW!
 
 #### Configuring Environments
 
@@ -164,6 +189,8 @@ F037 - Retrieval Reference Number (RRN)
 4. Select the default environment with the **Default** checkbox
 5. Save with **💾 Save**
 
+![Environment Settings Dialog](screenshots/environmentsettings.png)
+
 #### Sending Messages
 
 1. Select the target environment from the **Environment** dropdown in the toolbar
@@ -177,17 +204,63 @@ F037 - Retrieval Reference Number (RRN)
 
 **Note:** TCP/IP integration may require customization in the `MessageSender.cs` file's TODO sections, as each gateway may have its own message format.
 
-### Managing History
+---
 
-1. Open **History** tab
+### History Management
+
+1. Open the **History** tab
 2. View all saved messages in the table
 3. Use the search box to filter by name, MTI, or tags
-4. Click a message to view details in the preview panel
+4. Click on a message to view details in the preview panel
 5. Actions:
-   - **Load to Build**: Open message in Build tab for editing
-   - **Load to Parse**: Open message in Parse tab
-   - **Delete**: Remove message from history
+   - **Load to Build**: Open the message in Build tab for editing
+   - **Load to Parse**: Open the message in Parse tab
+   - **Delete**: Remove the message from history
    - **Copy Hex**: Copy hex value to clipboard
+
+---
+
+## ⚙️ Configuration Files
+
+### Environment Settings
+Environment settings are automatically stored at:
+```
+C:\Users\{Username}\AppData\Roaming\Tamga\environments.json
+```
+
+**Example `environments.json`:**
+```json
+{
+  "Environments": [
+    {
+      "Id": "1",
+      "Name": "Test",
+      "Host": "192.168.1.100",
+      "Port": 5000,
+      "TimeoutSeconds": 30,
+      "IsDefault": true,
+      "IsEnabled": true,
+      "Description": "Test environment"
+    },
+    {
+      "Id": "2",
+      "Name": "Production",
+      "Host": "10.0.0.50",
+      "Port": 6000,
+      "TimeoutSeconds": 60,
+      "IsDefault": false,
+      "IsEnabled": true,
+      "Description": "Production environment"
+    }
+  ]
+}
+```
+
+### Message History
+Saved messages are stored at:
+```
+C:\Users\{Username}\AppData\Roaming\Tamga\messages.json
+```
 
 ---
 
@@ -229,24 +302,32 @@ F037 - Retrieval Reference Number (RRN)
 - **Framework**: .NET Framework 4.7.2
 - **UI**: Windows Forms
 - **Storage**: JSON (Newtonsoft.Json 13.0.4)
+- **Network**: System.Net.Sockets (TCP/IP)
 - **Architecture**: Event-Driven, Tab Manager Pattern
 
 ### Project Structure
 ```
 Tamga/
 ├── Forms/
-│   ├── MainForm.cs                  # Main window (TabControl host)
+│   ├── MainForm.cs                  # Main window (TabControl + Toolbar)
 │   ├── ComboBoxItem.cs              # Helper class
 │   ├── AddFieldDialog.cs            # Field selection dialog
-│   ├── SaveMessageDialog.cs         # Save with tags/notes
+│   ├── SaveMessageDialog.cs         # Save with label/note
+│   ├── Dialogs/
+│   │   └── EnvironmentSettingsDialog.cs  # Environment management
 │   └── Tabs/
-│       ├── BuildTabManager.cs       # Message creation logic
+│       ├── BuildTabManager.cs       # Message building logic
 │       ├── ParseTabManager.cs       # Message parsing logic
 │       └── HistoryTabManager.cs     # Storage management
 ├── Models/
 │   ├── Iso8583MessageBuilder.cs     # Core message builder
 │   ├── Iso8583MessageParser.cs      # Core message parser
 │   ├── MessageStorageManager.cs     # JSON persistence
+│   ├── MessageSender.cs             # TCP/IP sender
+│   ├── MessageSenderHelper.cs       # UI integration
+│   ├── ServerEnvironment.cs         # Environment model
+│   ├── EnvironmentSettings.cs       # Environment settings management
+│   ├── MessageResponse.cs           # Response model
 │   ├── FieldDefinition.cs           # Field metadata
 │   ├── ParsedMessage.cs             # Parser results
 │   ├── SavedMessage.cs              # Storage model
@@ -263,6 +344,34 @@ Tamga/
 - **Event-Driven Architecture**: Loose coupling between components
 - **Repository Pattern**: MessageStorageManager abstracts data access
 - **Builder Pattern**: Step-by-step message construction
+- **Singleton Pattern**: EnvironmentSettings global configuration management
+
+---
+
+## 🔧 Developer Notes
+
+### Customizing TCP/IP Integration
+
+In the `MessageSender.cs` file, you can customize the message sending and receiving code according to your gateway's expected format:
+```csharp
+// Customize the TODO sections for your format:
+
+// Example Format 1: ASCII Length + Binary Message
+string length = binaryMessage.Length.ToString();
+await stream.WriteAsync(Encoding.ASCII.GetBytes(length));
+await stream.WriteAsync(binaryMessage);
+
+// Example Format 2: Binary Length (2-byte) + Binary Message
+byte[] lengthBytes = BitConverter.GetBytes((short)binaryMessage.Length);
+if (BitConverter.IsLittleEndian) Array.Reverse(lengthBytes);
+await stream.WriteAsync(lengthBytes);
+await stream.WriteAsync(binaryMessage);
+```
+
+Common gateway formats:
+- **ASCII Length + Binary Message**: `"19"` + `[0x30, 0x32, ...]`
+- **Binary 2-byte Length**: `[0x00, 0x13]` + `[0x30, 0x32, ...]`
+- **Binary 4-byte Length**: `[0x00, 0x00, 0x00, 0x13]` + `[0x30, ...]`
 
 ---
 
@@ -270,4 +379,5 @@ Tamga/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-**TL;DR**: You can use this project for any purpose, including commercial use, as long as you include the original license.
+---
+

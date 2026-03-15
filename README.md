@@ -375,27 +375,6 @@ Yaygın gateway formatları:
 
 ---
 
-## ⌨️ Klavye Kısayolları
-
-| Kısayol | Açıklama |
-|---------|----------|
-| `Ctrl+Enter` | Seçili ortama mesaj gönder |
-| `Ctrl+S` | Mesajı kaydet |
-| `Ctrl+P` | Mesajı parse et |
-| `Ctrl+N` | Yeni mesaj |
-
----
-
-## 🤝 Katkıda Bulunma
-
-1. Projeyi fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
----
-
 ## 📄 Lisans
 
 Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
