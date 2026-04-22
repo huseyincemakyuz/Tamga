@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Tamga.Controls;
 using Tamga.Models;
@@ -15,6 +16,7 @@ namespace Tamga.Forms.Tabs
 
         private TabPage tabPage;
         private ComboBox cmbMessageType;
+        private ComboBox cmbEncoding;
         private Panel pnlFields;
         private Button btnGenerate;
         private Button btnClear;
@@ -71,6 +73,25 @@ namespace Tamga.Forms.Tabs
                 Font = new Font("Segoe UI", 10)
             };
             cmbMessageType.SelectedIndexChanged += CmbMessageType_SelectedIndexChanged;
+
+            var lblEncoding = new Label
+            {
+                Location = new Point(610, 20),
+                Text = "Encoding:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                AutoSize = true
+            };
+
+            cmbEncoding = new ComboBox
+            {
+                Location = new Point(700, 18),
+                Width = 120,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 10)
+            };
+            cmbEncoding.Items.Add("ASCII");
+            cmbEncoding.Items.Add("BCD");
+            cmbEncoding.SelectedIndex = 0;
 
             topPanel.Controls.AddRange(new Control[] { lblMsgType, cmbMessageType });
 
@@ -377,8 +398,11 @@ namespace Tamga.Forms.Tabs
                 var selected = (ComboBoxItem)cmbMessageType.SelectedItem;
                 var template = (MessageTemplate)selected.Value;
 
+                var selectedEncoding = cmbEncoding.SelectedIndex == 1 ? EncodingFormat.BCD : EncodingFormat.ASCII;
+
                 messageBuilder = new Iso8583MessageBuilder();
                 messageBuilder.SetMTI(template.MTI);
+                messageBuilder.SetEncoding(selectedEncoding);
 
                 foreach (var fieldControl in fieldControls.Where(fc => fc.IsFieldEnabled))
                 {
@@ -492,6 +516,7 @@ namespace Tamga.Forms.Tabs
         private void ShowDecodedView(string mti)
         {
             rtbDecodedView.Clear();
+            AppendColored($"Encoding: {encoding}\n", Color.Purple, true);
             AppendColored($"MTI: {mti}\n", Color.DarkBlue, true);
             AppendColored($"Bitmap: (Auto-generated based on fields)\n\n", Color.DarkGreen, false);
             AppendColored("Fields:\n", Color.Black, true);
@@ -501,8 +526,20 @@ namespace Tamga.Forms.Tabs
             {
                 AppendColored($"F{fieldControl.FieldNumber:D3} ", Color.DarkRed, true);
                 AppendColored($"({fieldControl.Definition.Name})\n", Color.Gray, false);
-                AppendColored($"     Value: ", Color.Black, false);
-                AppendColored($"{fieldControl.FieldValue}\n", Color.DarkBlue, false);
+
+                string fieldValue = fieldControl.FieldValue;
+
+                if (ContainsNonPrintable(fieldValue))
+                {
+                    AppendColored($"     ASCII: ", Color.Black, false);
+                    AppendColored($"{SanitizeForDisplay(fieldValue)}", Color.DarkBlue, false);
+                }
+                else
+                {
+                    AppendColored($"     Value: ", Color.Black, false);
+                    AppendColored($"{fieldControl.FieldValue}\n", Color.DarkBlue, false);
+                }
+                    
                 AppendColored($"     Type: {fieldControl.Definition.Type}, {fieldControl.Definition.LengthType}\n\n", Color.Gray, false);
             }
         }
@@ -526,6 +563,28 @@ namespace Tamga.Forms.Tabs
             }
             return sb.ToString();
         }
+
+        private bool ContainsNonPrintable(string text)
+        {
+            foreach (char c in text)
+            {
+                if (c < 0x20 || c > 0x7E)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private string SanitizeForDisplay(string text)
+        {
+            var sb = new System.Text.StringBuilder(text.Length);
+            foreach (char c in text)
+            {
+                sb.Append(c >= 0x20 && c <= 0x7E ? c : '.');
+            }
+            return sb.ToString();
+        }
+
 
         #endregion
 
@@ -601,6 +660,9 @@ namespace Tamga.Forms.Tabs
                 if (cmbMessageType.Items.Count > 0)
                     cmbMessageType.SelectedIndex = 0;
             }
+
+            // Encoding formatini otomatik ayarla
+            cmbEncoding.SelectedIndex = parsedMessage.Encoding == EncodingFormat.BCD ? 1 : 0;
 
             // Load fields from parsed message
             if (parsedMessage.Fields != null)

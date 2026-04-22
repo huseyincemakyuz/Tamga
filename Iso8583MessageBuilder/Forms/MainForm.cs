@@ -101,10 +101,7 @@ namespace Tamga.Forms
             historyTabManager.LoadToBuildRequested += HistoryTabManager_LoadToBuildRequested;
             historyTabManager.LoadToParseRequested += HistoryTabManager_LoadToParseRequested;
         }
-
-        // ═══════════════════════════════════════════════
-        // YENİ: TOOLBAR
-        // ═══════════════════════════════════════════════
+       
         private void InitializeToolbar()
         {
             toolStrip = new ToolStrip
@@ -251,8 +248,7 @@ namespace Tamga.Forms
         #endregion
 
         #region Event Handlers
-
-        ///////////yeni kodlar///////
+       
         private void LoadEnvironments()
         {
             cmbEnvironment.Items.Clear();
@@ -294,10 +290,7 @@ namespace Tamga.Forms
                 }
             }
         }
-
-        // ═══════════════════════════════════════════════
-        // SEND BUTONU EVENT
-        // ═══════════════════════════════════════════════
+       
         private async void BtnSend_Click(object sender, EventArgs e)
         {
             try
@@ -390,11 +383,8 @@ namespace Tamga.Forms
 
             return "No message to send!";
         }
-
-        // ═══════════════════════════════════════════════
-        // KLAVYE KISAYOLU (Ctrl+Enter)
-        // ═══════════════════════════════════════════════
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) // incele!!!!!!
+      
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) 
         {
             if (keyData == (Keys.Control | Keys.Enter))
             {
@@ -404,10 +394,7 @@ namespace Tamga.Forms
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
-
-
-        ///////////yeni kodlar///////
-
+        
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
             // History tab seçildiğinde mesajları yükle

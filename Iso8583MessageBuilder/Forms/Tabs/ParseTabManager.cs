@@ -187,15 +187,14 @@ namespace Tamga.Forms.Tabs
                 }
 
                 var parser = new Iso8583MessageParser();
-                var parsedMessage = parser.Parse(txtHexInput.Text);
+                //var parsedMessage = parser.Parse(txtHexInput.Text);
 
-                DisplayParsedMessage(parsedMessage);
+                lastParsedMessage = parser.Parse(txtHexInput.Text); 
 
-                lastParsedMessage = parser.Parse(txtHexInput.Text); // YENİ
-                
+                DisplayParsedMessage(lastParsedMessage);
+                               
                 btnLoadToBuild.Enabled = lastParsedMessage != null &&
                                          lastParsedMessage.Errors.Count == 0;
-
                 
             }
             catch (Exception ex)
@@ -294,6 +293,10 @@ namespace Tamga.Forms.Tabs
 
         private void DisplayParsedMessage(ParsedMessage parsedMessage)
         {
+
+            // Display Encoding Format
+            AppendColored($"MTI: {parsedMessage.EncodingFormat}\n", Color.Purple, true);
+
             // Display MTI
             AppendColored($"MTI: {parsedMessage.MTI}\n", Color.DarkBlue, true);
             AppendColored($"Message Type: {GetMessageTypeName(parsedMessage.MTI)}\n\n", Color.Gray, false);
@@ -326,6 +329,19 @@ namespace Tamga.Forms.Tabs
                 AppendColored($"{fieldDef.Type}, {fieldDef.LengthType}\n", Color.DarkCyan, false);
                 AppendColored($"     Value: ", Color.Gray, false);
                 AppendColored($"{field.Value}\n", Color.DarkBlue, false);
+
+                //Non-printable karakter kontrolu
+                if (ContainsNonPrintable(field.Value))
+                {
+                    // ASCII gosterim (non-printable -> '.' ile degistir)
+                    AppendColored($"      ASCII: ", Color.Gray, false);
+                    AppendColored($"{SanitizeForDisplay(field.Value)} ", Color.DarkRed, false);
+                }
+                else
+                {
+                    AppendColored($"     Value: ", Color.Gray, false);
+                    AppendColored($"{field.Value}\n", Color.DarkBlue, false);
+                }
             }
 
             // Display Errors/Warnings
@@ -345,6 +361,27 @@ namespace Tamga.Forms.Tabs
                 AppendColored("\n\n", Color.Black, false);
                 AppendColored("✓ The message has been successfully parsed!\n", Color.Green, true);
             }
+        }
+
+        private bool ContainsNonPrintable(string text)
+        {
+            foreach (char c in text)
+            {
+                if (c < 0x20 || c > 0x7E)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private string SanitizeForDisplay(string text)
+        {
+            var sb = new System.Text.StringBuilder(text.Length);
+            foreach (char c in text)
+            {
+                sb.Append(c >= 0x20 && c <= 0x7E ? c : '.');
+            }
+            return sb.ToString();
         }
 
         private void AppendColored(string text, Color color, bool bold = false)
