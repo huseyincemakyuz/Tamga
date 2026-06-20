@@ -205,9 +205,7 @@ namespace Tamga.Models
                             throw new Exception($"Not enough data for the fixed field ({fieldLength} bytes required)");
                         }
                         value = BcdToString(messageBytes, position, bcdBytes);
-                        // Eger tek uzunluksa bastaki 0'i kaldir
-                        if(value.Length > fieldLength)
-                            value = value.Substring(value.Length - fieldLength);
+                        value = StripBcdPadding(value, fieldLength, fieldDef);
                         position += bcdBytes;
                     }
                     else if(bcdBinary)
@@ -270,8 +268,7 @@ namespace Tamga.Models
                             throw new Exception($"Not enough data for BCD LLVAR field ({bcdDataBytes} bytes required)");
                         }
                         value = BcdToString(messageBytes, position, bcdDataBytes);
-                        if(value.Length > fieldLength)
-                                value = value.Substring(value.Length - fieldLength);
+                        value = StripBcdPadding(value, fieldLength, fieldDef);
                         position += bcdDataBytes;
                     }
                     else if(bcdBinary)
@@ -330,8 +327,7 @@ namespace Tamga.Models
                             throw new Exception($"Not enough data for BCD LLLVAR field ({bcdDataBytes} bytes required)");
                         }
                         value = BcdToString(messageBytes, position, bcdDataBytes);
-                        if (value.Length > fieldLength)
-                            value = value.Substring(value.Length - fieldLength);
+                        value = StripBcdPadding(value, fieldLength, fieldDef);
                         position += bcdDataBytes;
                     }
                     else if (bcdBinary)
@@ -396,6 +392,23 @@ namespace Tamga.Models
                  || fieldDef.Type == FieldType.Amount
                  || fieldDef.Type == FieldType.Date
                  || fieldDef.Type == FieldType.Time;
+        }
+
+        /// <summary>
+        /// BCD-packed degerin padding'ini cikarir.
+        /// - Numeric alanlar: padding sola eklenir (leading 0), bastan trim.
+        /// - Track 2/Track 1 (IsBcdPacked AlphaNumeric): padding saga eklenir (trailing F sentinel), sondan trim.
+        /// </summary>
+        private string StripBcdPadding(string packedValue, int fieldLength, FieldDefinition fieldDef)
+        {
+            if (packedValue.Length <= fieldLength)
+                return packedValue;
+
+            if (IsNumericField(fieldDef))
+                return packedValue.Substring(packedValue.Length - fieldLength);
+
+            // Track 2/Track 1 gibi non-numeric BCD-packed: sondaki sentinel'i at
+            return packedValue.Substring(0, fieldLength);
         }
 
         /// <summary>
