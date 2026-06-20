@@ -295,7 +295,7 @@ namespace Tamga.Forms.Tabs
         {
 
             // Display Encoding Format
-            AppendColored($"MTI: {parsedMessage.EncodingFormat}\n", Color.Purple, true);
+            AppendColored($"Encoding: {parsedMessage.Encoding}\n", Color.Purple, true);
 
             // Display MTI
             AppendColored($"MTI: {parsedMessage.MTI}\n", Color.DarkBlue, true);
