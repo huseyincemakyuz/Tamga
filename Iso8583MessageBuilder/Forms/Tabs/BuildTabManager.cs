@@ -516,7 +516,8 @@ namespace Tamga.Forms.Tabs
         private void ShowDecodedView(string mti)
         {
             rtbDecodedView.Clear();
-            AppendColored($"Encoding: {encoding}\n", Color.Purple, true);
+            var selectedEncoding = cmbEncoding.SelectedIndex == 1 ? EncodingFormat.BCD : EncodingFormat.ASCII;
+            AppendColored($"Encoding: {selectedEncoding}\n", Color.Purple, true);
             AppendColored($"MTI: {mti}\n", Color.DarkBlue, true);
             AppendColored($"Bitmap: (Auto-generated based on fields)\n\n", Color.DarkGreen, false);
             AppendColored("Fields:\n", Color.Black, true);
