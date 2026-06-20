@@ -229,15 +229,15 @@ namespace Tamga.Models
 
         private static string CurrencyOrCountry(string hex)
         {
+            // ISO 4217 currency codes ve ISO 3166-1 country codes ortak olabilir
             switch (hex)
             {
-                case "0949": return "TRY (Turkey)";
+                case "0949": return "TRY / Turkey";
                 case "0978": return "EUR";
-                case "0840": return "USD";
-                case "0826": return "GBP";
-                case "0792": return "TR";
-                case "0276": return "DE";
-                case "0840": return "US";
+                case "0840": return "USD / United States";
+                case "0826": return "GBP / United Kingdom";
+                case "0792": return "Turkey";
+                case "0276": return "Germany";
             }
             return null;
         }
