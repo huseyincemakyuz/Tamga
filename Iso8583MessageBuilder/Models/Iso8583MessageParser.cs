@@ -188,15 +188,17 @@ namespace Tamga.Models
         {
             int fieldLength = 0;
             string value = "";
+            bool bcdPacked = encoding == EncodingFormat.BCD && IsBcdPackedNibble(fieldDef);
+            bool bcdBinary = encoding == EncodingFormat.BCD && fieldDef.Type == FieldType.Binary;
 
             switch (fieldDef.LengthType)
             {
                 case LengthType.Fixed:
                     fieldLength = fieldDef.MaxLength;
 
-                    if(encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
+                    if(bcdPacked)
                     {
-                        // BCD: Numeric field'lari yari uzunlukta (2 rakam = 1 byte)
+                        // BCD: Numeric/Track field'lari yari uzunlukta (2 rakam = 1 byte)
                         int bcdBytes = (fieldLength + 1) / 2;
                         if(position + bcdBytes > messageBytes.Length)
                         {
@@ -208,6 +210,17 @@ namespace Tamga.Models
                             value = value.Substring(value.Length - fieldLength);
                         position += bcdBytes;
                     }
+                    else if(bcdBinary)
+                    {
+                        // Binary in BCD: MaxLength = hex karakter (nibble) sayisi, byte sayisi = MaxLength/2
+                        int byteCount = (fieldLength + 1) / 2;
+                        if (position + byteCount > messageBytes.Length)
+                        {
+                            throw new Exception($"Not enough data for the binary fixed field ({byteCount} bytes required)");
+                        }
+                        value = BcdToString(messageBytes, position, byteCount);
+                        position += byteCount;
+                    }
                     else
                     {
                         // ASCII her karakter 1 byte
@@ -217,7 +230,7 @@ namespace Tamga.Models
                         }
                         value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
                         position += fieldLength;
-                    }                   
+                    }
                     break;
 
                 case LengthType.LLVAR:
@@ -248,9 +261,9 @@ namespace Tamga.Models
                         }
                     }
 
-                    // BCD numeric ise data'yi da BCD olarak oku
-                    if(encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
+                    if(bcdPacked)
                     {
+                        // BCD packed: length = nibble sayisi
                         int bcdDataBytes = (fieldLength + 1) / 2;
                         if(position + bcdDataBytes > messageBytes.Length)
                         {
@@ -261,6 +274,16 @@ namespace Tamga.Models
                                 value = value.Substring(value.Length - fieldLength);
                         position += bcdDataBytes;
                     }
+                    else if(bcdBinary)
+                    {
+                        // Binary in BCD: length = byte sayisi
+                        if (position + fieldLength > messageBytes.Length)
+                        {
+                            throw new Exception($"Not enough data for binary LLVAR field ({fieldLength} bytes required)");
+                        }
+                        value = BcdToString(messageBytes, position, fieldLength);
+                        position += fieldLength;
+                    }
                     else
                     {
                         if (position + fieldLength > messageBytes.Length)
@@ -269,7 +292,7 @@ namespace Tamga.Models
                         }
                         value = Encoding.ASCII.GetString(messageBytes, position, fieldLength);
                         position += fieldLength;
-                    } 
+                    }
                     break;
 
                 case LengthType.LLLVAR:
@@ -299,8 +322,7 @@ namespace Tamga.Models
                         }
                     }
 
-                    // BCD numeric ise data'yi da BCD olarak oku
-                    if (encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
+                    if (bcdPacked)
                     {
                         int bcdDataBytes = (fieldLength + 1) / 2;
                         if (position + bcdDataBytes > messageBytes.Length)
@@ -311,6 +333,16 @@ namespace Tamga.Models
                         if (value.Length > fieldLength)
                             value = value.Substring(value.Length - fieldLength);
                         position += bcdDataBytes;
+                    }
+                    else if (bcdBinary)
+                    {
+                        // Binary in BCD: length = byte sayisi (EMV TLV gibi)
+                        if (position + fieldLength > messageBytes.Length)
+                        {
+                            throw new Exception($"Not enough data for binary LLLVAR field ({fieldLength} bytes required)");
+                        }
+                        value = BcdToString(messageBytes, position, fieldLength);
+                        position += fieldLength;
                     }
                     else
                     {
@@ -357,13 +389,23 @@ namespace Tamga.Models
 
         /// <summary>
         /// Field'in numeric olup olmadigini kontrol eder
-        /// </summary>        
+        /// </summary>
         private bool IsNumericField(FieldDefinition fieldDef)
         {
             return fieldDef.Type == FieldType.Numeric
                  || fieldDef.Type == FieldType.Amount
                  || fieldDef.Type == FieldType.Date
                  || fieldDef.Type == FieldType.Time;
+        }
+
+        /// <summary>
+        /// BCD modda nibble bazli paketlenmis bir alan mi?
+        /// Numeric tipler her zaman paketlidir; Track 2/Track 1 gibi alanlar IsBcdPacked
+        /// bayragi ile isaretlenir (icerdikleri D/F sentinel'leri nibble olarak gider).
+        /// </summary>
+        private bool IsBcdPackedNibble(FieldDefinition fieldDef)
+        {
+            return IsNumericField(fieldDef) || fieldDef.IsBcdPacked;
         }
 
         // Alan kontrolü

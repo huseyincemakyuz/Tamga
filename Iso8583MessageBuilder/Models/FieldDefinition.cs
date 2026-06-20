@@ -27,5 +27,9 @@ namespace Tamga.Models
         public FieldType Type { get; set; }
         public LengthType LengthType { get; set; }
         public int MaxLength { get; set; }
+
+        // BCD encoding'de digit/nibble olarak paketlenen ama tip olarak AlphaNumeric kalan alanlar icin
+        // (ornek: Track 2/Track 1 - rakam + 'D','F' gibi sentinel karakterler iceriyor)
+        public bool IsBcdPacked { get; set; }
     }
 }
