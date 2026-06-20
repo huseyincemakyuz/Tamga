@@ -139,99 +139,150 @@ namespace Tamga.Models
         private byte[] FormatField(FieldDefinition fieldDef, string value)
         {
             var result = new List<byte>();
+            value = value ?? "";
+
+            bool bcd = _encoding == EncodingFormat.BCD;
+            bool isNum = IsNumericField(fieldDef);
+            bool bcdPacked = bcd && IsBcdPackedNibble(fieldDef);   // Numeric + Track 2/Track 1
+            bool bcdBinary = bcd && fieldDef.Type == FieldType.Binary;
 
             switch (fieldDef.LengthType)
             {
                 case LengthType.Fixed:
-                    if (IsNumericField(fieldDef))
+                    if (bcdBinary)
+                    {
+                        // Binary in BCD: kullanici hex string girer, MaxLength = nibble sayisi
+                        value = (value.Length >= fieldDef.MaxLength)
+                            ? value.Substring(0, fieldDef.MaxLength)
+                            : value.PadRight(fieldDef.MaxLength, '0');
+                        if (value.Length % 2 != 0) value += "0";
+                        result.AddRange(HexToBytes(value));
+                    }
+                    else if (bcdPacked)
+                    {
+                        // Numeric: soldan 0, Track: sagdan F sentinel
+                        value = isNum
+                            ? value.PadLeft(fieldDef.MaxLength, '0')
+                            : value.PadRight(fieldDef.MaxLength, 'F');
+                        if (value.Length % 2 != 0) value = isNum ? "0" + value : value + "F";
+                        result.AddRange(HexToBytes(value));
+                    }
+                    else if (isNum)
                     {
                         value = value.PadLeft(fieldDef.MaxLength, '0');
+                        result.AddRange(Encoding.ASCII.GetBytes(value));
                     }
                     else
                     {
                         value = value.PadRight(fieldDef.MaxLength, ' ');
-                    }
-
-                    if(_encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
-                    {
-                        // BCD: "000010000000" -> [0x00, 0x00, 0x10, 0x00, 0x00] (6 byte)
-                        result.AddRange(StringToBcd(value));
-                    }
-                    else
-                    {
-                        // ASCII: "000010000000" -> [0x30,0x30,0x30,0x30,0x31,0x30,....] (12 byte)
                         result.AddRange(Encoding.ASCII.GetBytes(value));
                     }
                     break;
 
                 case LengthType.LLVAR:
-                    if (_encoding == EncodingFormat.BCD)
-                    {
-                        // BCD: Length prefix 1 byte
-                        // Ornek: Length = 16 -> [0x16] (1 byte)
-                        result.AddRange(StringToBcd(value.Length.ToString("D2")));
-                    }
-                    else
-                    {
-                        // ASCII: Length prefix 2 byte
-                        // Ornek: length = 16 -> [0x30, 0x36] ("16")
-                        result.AddRange(Encoding.ASCII.GetBytes(value.Length.ToString("D2")));
-                    }
-
-                    // Data Kismi
-                    if (_encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
-                    {
-                        // BCD numeric data: "5528791222789877" -> [0x55, 0x28,...] (8 byte)
-                        result.AddRange(StringToBcd(value));
-                    }
-                    else
-                    {
-                        // ASCII: data (aplha/AN veya ASCII mode)
-                        result.AddRange(Encoding.ASCII.GetBytes(value));
-                    }
+                    EmitVarField(result, fieldDef, value, bcd, bcdPacked, bcdBinary, isNum,
+                        bcdPrefixDigits: 2, asciiPrefixDigits: 2);
                     break;
-                    
-                case LengthType.LLLVAR:
-                    if (_encoding == EncodingFormat.BCD)
-                    {
-                        // BCD: Length prefix 2 byte
-                        // Ornek: Length = 99 -> [0x16, 0x99] (2 byte)
-                        result.AddRange(StringToBcd(value.Length.ToString("D4")));
-                    }
-                    else
-                    {
-                        // ASCII: Length prefix 3 byte
-                        // Ornek: length = 99 -> [0x30, 0x39, 0x39] ("099")
-                        result.AddRange(Encoding.ASCII.GetBytes(value.Length.ToString("D3")));
-                    }
 
-                    // Data Kismi
-                    if (_encoding == EncodingFormat.BCD && IsNumericField(fieldDef))
-                    {
-                        // BCD numeric data
-                        result.AddRange(StringToBcd(value));
-                    }
-                    else
-                    {
-                        // ASCII data 
-                        result.AddRange(Encoding.ASCII.GetBytes(value));
-                    }
+                case LengthType.LLLVAR:
+                    EmitVarField(result, fieldDef, value, bcd, bcdPacked, bcdBinary, isNum,
+                        bcdPrefixDigits: 4, asciiPrefixDigits: 3);
                     break;
             }
 
             return result.ToArray();
         }
 
+        private void EmitVarField(List<byte> result, FieldDefinition fieldDef, string value,
+            bool bcd, bool bcdPacked, bool bcdBinary, bool isNum,
+            int bcdPrefixDigits, int asciiPrefixDigits)
+        {
+            int length;
+            byte[] data;
+
+            if (bcdBinary)
+            {
+                // Length = byte sayisi (EMV gibi)
+                if (value.Length % 2 != 0) value += "0";
+                data = HexToBytes(value);
+                length = data.Length;
+            }
+            else if (bcdPacked)
+            {
+                // Length = nibble sayisi; tek ise sentinel ile padle
+                length = value.Length;
+                string padded = (value.Length % 2 != 0)
+                    ? (isNum ? "0" + value : value + "F")
+                    : value;
+                data = HexToBytes(padded);
+            }
+            else if (bcd && isNum)
+            {
+                length = value.Length;
+                data = StringToBcd(value);
+            }
+            else
+            {
+                length = value.Length;
+                data = Encoding.ASCII.GetBytes(value);
+            }
+
+            // Length prefix
+            string lenStr = length.ToString("D" + (bcd ? bcdPrefixDigits : asciiPrefixDigits));
+            if (bcd)
+                result.AddRange(StringToBcd(lenStr));
+            else
+                result.AddRange(Encoding.ASCII.GetBytes(lenStr));
+
+            result.AddRange(data);
+        }
+
 
         /// <summary>
         /// Field'in numeric olup olmadigini kontrol eder
-        /// </summary>        
+        /// </summary>
         private bool IsNumericField(FieldDefinition fieldDef)
         {
             return fieldDef.Type == FieldType.Numeric
                  || fieldDef.Type == FieldType.Amount
                  || fieldDef.Type == FieldType.Date
                  || fieldDef.Type == FieldType.Time;
+        }
+
+        /// <summary>
+        /// BCD modunda nibble bazli paketlenen alan (Numeric ailesi + IsBcdPacked
+        /// bayrakli alanlar, ornek: Track 2 / Track 1).
+        /// </summary>
+        private bool IsBcdPackedNibble(FieldDefinition fieldDef)
+        {
+            return IsNumericField(fieldDef) || fieldDef.IsBcdPacked;
+        }
+
+        /// <summary>
+        /// Hex karakterli string'i ham byte dizisine cevirir (0-9, A-F kabul eder).
+        /// Track 2 sentinel'leri (D/F) ve binary alan icin kullanilir.
+        /// </summary>
+        private byte[] HexToBytes(string hex)
+        {
+            if (hex.Length % 2 != 0)
+                hex += "0";
+
+            byte[] result = new byte[hex.Length / 2];
+            for (int i = 0; i < result.Length; i++)
+            {
+                byte high = (byte)(HexCharToNibble(hex[i * 2]) << 4);
+                byte low = HexCharToNibble(hex[i * 2 + 1]);
+                result[i] = (byte)(high | low);
+            }
+            return result;
+        }
+
+        private byte HexCharToNibble(char c)
+        {
+            if (c >= '0' && c <= '9') return (byte)(c - '0');
+            if (c >= 'A' && c <= 'F') return (byte)(c - 'A' + 10);
+            if (c >= 'a' && c <= 'f') return (byte)(c - 'a' + 10);
+            throw new ArgumentException($"Invalid hex character: '{c}'. Only 0-9 and A-F are allowed.");
         }
 
         /// <summary>
