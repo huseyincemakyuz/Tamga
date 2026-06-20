@@ -336,6 +336,12 @@ namespace Tamga.Forms.Tabs
                     AppendColored($"     ASCII: ", Color.Gray, false);
                     AppendColored($"{SanitizeForDisplay(field.Value)}\n", Color.DarkRed, false);
                 }
+
+                // EMV TLV cozumleme - Binary tipindeki alanlar (ornek F55)
+                if (fieldDef.Type == FieldType.Binary && fieldDef.LengthType != LengthType.Fixed)
+                {
+                    AppendEmvTlv(field.Value);
+                }
             }
 
             // Display Errors/Warnings
@@ -354,6 +360,25 @@ namespace Tamga.Forms.Tabs
             {
                 AppendColored("\n\n", Color.Black, false);
                 AppendColored("✓ The message has been successfully parsed!\n", Color.Green, true);
+            }
+        }
+
+        private void AppendEmvTlv(string hexValue)
+        {
+            var tags = EmvTlvParser.Parse(hexValue);
+            if (tags.Count == 0)
+                return;
+
+            AppendColored($"     EMV TLV:\n", Color.Gray, true);
+            foreach (var t in tags)
+            {
+                AppendColored($"       {t.Tag,-6}", Color.DarkRed, true);
+                AppendColored($"{t.Name,-45}", Color.DarkCyan, false);
+                AppendColored($" L={t.Length,-3} ", Color.Gray, false);
+                AppendColored($"{t.Value}", Color.DarkBlue, false);
+                if (!string.IsNullOrEmpty(t.Decoded))
+                    AppendColored($"  ({t.Decoded})", Color.DarkGreen, false);
+                AppendColored("\n", Color.Black, false);
             }
         }
 

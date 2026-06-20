@@ -73,6 +73,7 @@
     <Compile Include="Forms\Tabs\ParseTabManager.cs" />
     <Compile Include="Models\ServerEnvironment.cs" />
     <Compile Include="Models\EnvironmentSettings.cs" />
+    <Compile Include="Models\EmvTlvParser.cs" />
     <Compile Include="Models\FieldDefinition.cs" />
     <Compile Include="Models\Iso8583Fields.cs" />
     <Compile Include="Models\Iso8583MessageBuilder.cs" />
