@@ -330,17 +330,11 @@ namespace Tamga.Forms.Tabs
                 AppendColored($"     Value: ", Color.Gray, false);
                 AppendColored($"{field.Value}\n", Color.DarkBlue, false);
 
-                //Non-printable karakter kontrolu
+                //Non-printable karakter kontrolu - ASCII gosterimi sadece ek bilgi olarak
                 if (ContainsNonPrintable(field.Value))
                 {
-                    // ASCII gosterim (non-printable -> '.' ile degistir)
-                    AppendColored($"      ASCII: ", Color.Gray, false);
-                    AppendColored($"{SanitizeForDisplay(field.Value)} ", Color.DarkRed, false);
-                }
-                else
-                {
-                    AppendColored($"     Value: ", Color.Gray, false);
-                    AppendColored($"{field.Value}\n", Color.DarkBlue, false);
+                    AppendColored($"     ASCII: ", Color.Gray, false);
+                    AppendColored($"{SanitizeForDisplay(field.Value)}\n", Color.DarkRed, false);
                 }
             }
 
