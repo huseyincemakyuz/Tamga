@@ -20,6 +20,12 @@ namespace Tamga.Controls
         public bool IsFieldEnabled => chkEnabled.Checked;
         public string FieldValue => txtValue.Text;
 
+        /// <summary>
+        /// True ise textbox icerigi non-printable byte iceren bir alanin
+        /// hex string gosterimidir; build sirasinda hex -> byte cevrilir.
+        /// </summary>
+        public bool IsHexMode { get; set; }
+
         public event EventHandler ValueChanged;
 
         public FieldControl(FieldDefinition fieldDef, bool isRequired = false)

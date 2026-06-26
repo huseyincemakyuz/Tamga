@@ -408,7 +408,10 @@ namespace Tamga.Forms.Tabs
                 {
                     if (!string.IsNullOrWhiteSpace(fieldControl.FieldValue))
                     {
-                        messageBuilder.SetField(fieldControl.FieldNumber, fieldControl.FieldValue);
+                        string raw = fieldControl.IsHexMode
+                            ? HexToString(fieldControl.FieldValue)
+                            : fieldControl.FieldValue;
+                        messageBuilder.SetField(fieldControl.FieldNumber, raw);
                     }
                 }
 
@@ -516,7 +519,8 @@ namespace Tamga.Forms.Tabs
         private void ShowDecodedView(string mti)
         {
             rtbDecodedView.Clear();
-            AppendColored($"Encoding: {encoding}\n", Color.Purple, true);
+            var selectedEncoding = cmbEncoding.SelectedIndex == 1 ? EncodingFormat.BCD : EncodingFormat.ASCII;
+            AppendColored($"Encoding: {selectedEncoding}\n", Color.Purple, true);
             AppendColored($"MTI: {mti}\n", Color.DarkBlue, true);
             AppendColored($"Bitmap: (Auto-generated based on fields)\n\n", Color.DarkGreen, false);
             AppendColored("Fields:\n", Color.Black, true);
@@ -573,6 +577,28 @@ namespace Tamga.Forms.Tabs
             }
 
             return false;
+        }
+
+        private string StringToHex(string text)
+        {
+            var sb = new System.Text.StringBuilder(text.Length * 2);
+            foreach (char c in text)
+                sb.Append(((byte)c).ToString("X2"));
+            return sb.ToString();
+        }
+
+        private string HexToString(string hex)
+        {
+            var clean = new System.Text.StringBuilder();
+            foreach (char c in hex)
+                if (!char.IsWhiteSpace(c)) clean.Append(c);
+            string h = clean.ToString();
+            if (h.Length % 2 != 0) h = h + "0";
+
+            var sb = new System.Text.StringBuilder(h.Length / 2);
+            for (int i = 0; i < h.Length; i += 2)
+                sb.Append((char)Convert.ToByte(h.Substring(i, 2), 16));
+            return sb.ToString();
         }
 
         private string SanitizeForDisplay(string text)
@@ -671,15 +697,26 @@ namespace Tamga.Forms.Tabs
                 {
                     var fieldControl = fieldControls.FirstOrDefault(fc => fc.FieldNumber == field.Key);
 
+                    string displayValue = field.Value;
+                    bool hexMode = false;
+
+                    // TextBox \0 (NUL) gordugunde geri kalan icerigi gostermiyor.
+                    // Non-printable iceren alanlar (ornek: F63 binary TLV) icin
+                    // hex temsile cevirip Build sirasinda geri donusturecegiz.
+                    if (ContainsNonPrintable(field.Value))
+                    {
+                        displayValue = StringToHex(field.Value);
+                        hexMode = true;
+                    }
+
                     if (fieldControl != null)
                     {
-                        // Field zaten var, değeri güncelle
-                        fieldControl.SetValue(field.Value);
-                        fieldControl.EnableField(true);  // Aktif et
+                        fieldControl.IsHexMode = hexMode;
+                        fieldControl.SetValue(displayValue);
+                        fieldControl.EnableField(true);
                     }
                     else
                     {
-                        // Field yok, yeni ekle
                         if (Iso8583Fields.Fields.ContainsKey(field.Key))
                         {
                             var fieldDef = Iso8583Fields.Fields[field.Key];
@@ -690,7 +727,8 @@ namespace Tamga.Forms.Tabs
                                 : 10;
 
                             newFieldControl.Location = new Point(10, yPos);
-                            newFieldControl.SetValue(field.Value);
+                            newFieldControl.IsHexMode = hexMode;
+                            newFieldControl.SetValue(displayValue);
                             newFieldControl.EnableField(true);
 
                             pnlFields.Controls.Add(newFieldControl);

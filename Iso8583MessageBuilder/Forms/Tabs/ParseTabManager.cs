@@ -295,7 +295,7 @@ namespace Tamga.Forms.Tabs
         {
 
             // Display Encoding Format
-            AppendColored($"MTI: {parsedMessage.EncodingFormat}\n", Color.Purple, true);
+            AppendColored($"Encoding: {parsedMessage.Encoding}\n", Color.Purple, true);
 
             // Display MTI
             AppendColored($"MTI: {parsedMessage.MTI}\n", Color.DarkBlue, true);
@@ -330,17 +330,17 @@ namespace Tamga.Forms.Tabs
                 AppendColored($"     Value: ", Color.Gray, false);
                 AppendColored($"{field.Value}\n", Color.DarkBlue, false);
 
-                //Non-printable karakter kontrolu
+                //Non-printable karakter kontrolu - ASCII gosterimi sadece ek bilgi olarak
                 if (ContainsNonPrintable(field.Value))
                 {
-                    // ASCII gosterim (non-printable -> '.' ile degistir)
-                    AppendColored($"      ASCII: ", Color.Gray, false);
-                    AppendColored($"{SanitizeForDisplay(field.Value)} ", Color.DarkRed, false);
+                    AppendColored($"     ASCII: ", Color.Gray, false);
+                    AppendColored($"{SanitizeForDisplay(field.Value)}\n", Color.DarkRed, false);
                 }
-                else
+
+                // EMV TLV cozumleme - Binary tipindeki alanlar (ornek F55)
+                if (fieldDef.Type == FieldType.Binary && fieldDef.LengthType != LengthType.Fixed)
                 {
-                    AppendColored($"     Value: ", Color.Gray, false);
-                    AppendColored($"{field.Value}\n", Color.DarkBlue, false);
+                    AppendEmvTlv(field.Value);
                 }
             }
 
@@ -360,6 +360,25 @@ namespace Tamga.Forms.Tabs
             {
                 AppendColored("\n\n", Color.Black, false);
                 AppendColored("✓ The message has been successfully parsed!\n", Color.Green, true);
+            }
+        }
+
+        private void AppendEmvTlv(string hexValue)
+        {
+            var tags = EmvTlvParser.Parse(hexValue);
+            if (tags.Count == 0)
+                return;
+
+            AppendColored($"     EMV TLV:\n", Color.Gray, true);
+            foreach (var t in tags)
+            {
+                AppendColored($"       {t.Tag,-6}", Color.DarkRed, true);
+                AppendColored($"{t.Name,-45}", Color.DarkCyan, false);
+                AppendColored($" L={t.Length,-3} ", Color.Gray, false);
+                AppendColored($"{t.Value}", Color.DarkBlue, false);
+                if (!string.IsNullOrEmpty(t.Decoded))
+                    AppendColored($"  ({t.Decoded})", Color.DarkGreen, false);
+                AppendColored("\n", Color.Black, false);
             }
         }
 
