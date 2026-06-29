@@ -353,7 +353,9 @@ namespace Tamga.Models
                     break;
             }
 
-            return value.TrimEnd(); // Remove trailing spaces for fixed fields
+            // LLVAR/LLLVAR'da trailing space VERIDIR (length onu sayiyor) - trim YOK.
+            // Fixed alanlarda trailing space sadece padding'dir - trim et.
+            return fieldDef.LengthType == LengthType.Fixed ? value.TrimEnd() : value;
         }
 
         /// <summary>
