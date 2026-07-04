@@ -93,7 +93,7 @@ namespace Tamga.Forms.Tabs
             cmbEncoding.Items.Add("BCD");
             cmbEncoding.SelectedIndex = 0;
 
-            topPanel.Controls.AddRange(new Control[] { lblMsgType, cmbMessageType });
+            topPanel.Controls.AddRange(new Control[] { lblMsgType, cmbMessageType, lblEncoding, cmbEncoding });
 
             // Middle Panel - Fields
             var middlePanel = new Panel
