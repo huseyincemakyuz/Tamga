@@ -19,6 +19,7 @@ namespace Tamga.Forms.Tabs
         private Button btnLoadToParse;
         private Button btnDeleteMessage;
         private Button btnExportMessage;
+        private Button btnEditMessage;
 
         private MessageStorageManager storageManager;
         private List<SavedMessage> currentMessages;
@@ -290,9 +291,23 @@ namespace Tamga.Forms.Tabs
             };
             btnExportMessage.Click += BtnExportMessage_Click;
 
+            btnEditMessage = new Button
+            {
+                Location = new Point(515, 5),
+                Text = "Edit",
+                Width = 100,
+                Height = 30,
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(255, 193, 7),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnEditMessage.FlatAppearance.BorderSize=0;
+            btnEditMessage.Click += BtnEditMessage_Click;
+
             buttonPanel.Controls.AddRange(new Control[]
             {
-                btnLoadToBuild, btnLoadToParse, btnDeleteMessage, btnExportMessage
+                btnLoadToBuild, btnLoadToParse, btnDeleteMessage, btnExportMessage, btnEditMessage
             });
 
             return buttonPanel;
@@ -448,6 +463,27 @@ namespace Tamga.Forms.Tabs
             Clipboard.SetText(message.HexMessage);
             MessageBox.Show("Hex message copied to clipboard!", "Success",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void BtnEditMessage_Click(object sender, EventArgs e)
+        {
+            var message = GetSelectedMessage();
+            if (message == null) return;
+
+            using (var dialog = new EditMessageDialog(message))
+            {
+                if(dialog.ShowDialog() == DialogResult.OK)
+                {
+                    message.Name = dialog.MessageName;
+                    message.Tags = dialog.Tags;
+                    message.Notes = dialog.Notes;
+
+                    storageManager.UpdateMessage(message);
+                    LoadSavedMessages();
+
+                    MessageBox.Show($"Message '{message.Name}' updated successfuly!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
 
         #endregion

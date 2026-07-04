@@ -21,6 +21,13 @@ namespace Tamga.Templates
                 RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49, 62 },
                 OptionalFields = new List<int> { 14, 25, 37, 42, 48, 55 }
             },
+             new MessageTemplate
+            {
+                MTI = "0110",
+                Name = "Authorization Request",
+                RequiredFields = new List<int> { 2, 3, 4, 7, 11, 12, 13, 22, 41, 49, 62 },
+                OptionalFields = new List<int> { 14, 25, 37, 42, 48, 55 }
+            },
             new MessageTemplate
             {
                 MTI = "0120",
